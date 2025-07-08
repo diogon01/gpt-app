@@ -1,0 +1,27 @@
+:root {
+    /* BRAND */
+    --c-primary: #0a1124;
+    /* fundo           */
+    --c-surface: #162032;
+    /* cards/barras    */
+    --c-accent: #8fd40b;
+    /* verde-limão     */
+    --c-text: #f1f5f9;
+    /* texto padrão    */
+
+    /* FEEDBACK */
+    --c-success: #22c55e;
+    /* emerald-500     */
+    --c-danger: #ef4444;
+    /* red-500         */
+    --c-warning: #fbbf24;
+    /* amber-400       */
+}
+
+/* Dark-mode opcional → usa data-atributo ou classe .dark */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --c-surface: #1e293b;
+        /* if you need darker surface */
+    }
+}
