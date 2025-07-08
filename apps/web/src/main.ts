@@ -2,7 +2,6 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import router from './router';          // 👈  novo
-import './theme.css';
 import './index.css';                   // Tailwind
 import App from './App.vue';
 
