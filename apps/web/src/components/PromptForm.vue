@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+
 const emit = defineEmits<{
   gerar: [{ prompt: string; tipo: 'art' | 'geo' }];
 }>();
@@ -16,14 +17,18 @@ function submit() {
 
 <template>
   <form @submit.prevent="submit" class="mx-auto max-w-3xl space-y-3">
+    <!-- Área de texto ------------------------------------------------>
     <textarea
       v-model="prompt"
       rows="3"
       placeholder="Digite seu prompt…"
-      class="w-full resize-none rounded border border-slate-700 bg-slate-800 p-3
-             focus:outline-none focus:ring-2 focus:ring-cyan-400"
+      class="w-full resize-none rounded border border-slate-700 bg-slate-800
+             px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400"
     />
+
+    <!-- Seleção + botão --------------------------------------------->
     <div class="flex gap-2">
+      <!-- Tipo -->
       <select
         v-model="tipo"
         class="rounded border border-slate-700 bg-slate-800 px-3 py-2
@@ -33,6 +38,7 @@ function submit() {
         <option value="geo">Geo-Analyze</option>
       </select>
 
+      <!-- Botão enviar -->
       <button
         type="submit"
         class="flex-1 rounded bg-cyan-400 px-4 py-2 font-semibold text-slate-950
