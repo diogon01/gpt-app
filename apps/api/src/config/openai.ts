@@ -1,10 +1,13 @@
 import { OpenAI } from 'openai';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import { env } from './env';
+
+if (!env.azureOpenAiKey || !env.azureOpenAiEndpoint || !env.azureOpenAiDeployment) {
+    throw new Error('⚠️  Variáveis AZURE_OPENAI_* não definidas no .env');
+}
 
 export const openai = new OpenAI({
-    apiKey: process.env.AZURE_OPENAI_KEY,
-    baseURL: `${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT_GPT}`,
+    apiKey: env.azureOpenAiKey,
+    baseURL: `${env.azureOpenAiEndpoint}/openai/deployments/${env.azureOpenAiDeployment}`,
     defaultQuery: { 'api-version': '2024-02-15-preview' },
-    defaultHeaders: { 'api-key': process.env.AZURE_OPENAI_KEY! },
+    defaultHeaders: { 'api-key': env.azureOpenAiKey },
 });

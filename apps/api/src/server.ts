@@ -3,10 +3,13 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import mongoose from 'mongoose';
+
 import * as dotenv from 'dotenv';
+import { env } from './config/env';
+import { connectMongo } from './database';
 
 import routes from './routes';
+
 
 // ────────────────────────────────────────────────────────────
 // 1.  Carrega variáveis de ambiente (.env)
@@ -24,7 +27,12 @@ app.use(cors());                  // libera CORS - ajuste origin se precisar
 app.use(express.json());          // parse JSON
 
 // Limite global de 60 req/min por IP (ajuste conforme necessidade)
-const limiter = rateLimit({ windowMs: 60_000, max: 60 });
+const limiter = rateLimit({
+    windowMs: 60_000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 app.use(limiter);
 
 // ────────────────────────────────────────────────────────────
@@ -36,6 +44,8 @@ app.use('/api', routes);          // IA + demais endpoints
 // ────────────────────────────────────────────────────────────
 // 4.  Middleware de erro (captura finais)
 // ────────────────────────────────────────────────────────────
+
+
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     console.error(err);
     res.status(err.status || 500).json({ error: err.message || 'Internal error' });
@@ -47,22 +57,16 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 const PORT = Number(process.env.PORT) || 3000;
 const MONGO_URI = process.env.MONGODB_URI || '';
 
-async function start() {
+async function startServer() {
     try {
-        if (!MONGO_URI) {
-            console.warn('⚠️  MONGODB_URI not set – skipping DB connection');
-        } else {
-            await mongoose.connect(MONGO_URI);
-            console.log('✅ MongoDB connected');
-        }
-
-        app.listen(PORT, () =>
-            console.log(`🚀 API ready → http://localhost:${PORT}`)
-        );
+        await connectMongo(); // Conecta ao MongoDB com URI validada
+        app.listen(env.port, () => {
+            console.log(`🚀 API pronta → http://localhost:${env.port}`);
+        });
     } catch (err) {
-        console.error('Failed to start server:', err);
+        console.error('❌ Falha ao iniciar servidor:', err);
         process.exit(1);
     }
 }
 
-start();
+startServer();
