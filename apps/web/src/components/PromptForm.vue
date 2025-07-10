@@ -3,7 +3,11 @@ import { ref } from 'vue';
 import { useUiStore } from '../stores/useUiStore';
 
 
-const ui      = useUiStore();          // ui.modelo = 'GPT-4o' | 'GPT-3.5' | 'GeoAI'
+const emit = defineEmits<{
+  'new-message': [{ prompt: string; response: { text?: string; imgUrl?: string } }];
+}>();
+
+const ui      = useUiStore();
 const prompt  = ref('');
 const loading = ref(false);
 
@@ -15,15 +19,16 @@ async function submit() {
     const res = await fetch('/api/ia', {
       method : 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({
-        prompt : prompt.value,
-        model : ui.model            // valor vindo da sidebar / topbar
-      })
+      body   : JSON.stringify({ prompt: prompt.value, model: ui.model })
     });
 
     const data = await res.json();
-    // TODO: tratar resposta (exibir imagem ou texto)
-    console.log(data);
+
+    const response: { text?: string; imgUrl?: string } = {};
+    if (data?.choices?.[0]?.message?.content) response.text  = data.choices[0].message.content;
+    if (data?.data?.[0]?.url)                  response.imgUrl = data.data[0].url;
+
+    emit('new-message', { prompt: prompt.value, response });
   } catch (err) {
     console.error('Request failed', err);
   } finally {

@@ -1,79 +1,71 @@
 <script setup lang="ts">
-// Importações da Vue
 import { ref, onMounted } from 'vue';
 
-// Componentes reutilizáveis
-import Sidebar       from '@/components/Sidebar.vue';
-import TopBar        from '@/components/TopBar.vue';
-import ChatArea      from '@/components/ChatArea.vue';
-import PromptForm    from '@/components/PromptForm.vue';
-
-// Stores (Pinia)
+/* ── Re-usable components ─────────────────────────────── */
+import Sidebar    from '@/components/Sidebar.vue';
+import TopBar     from '@/components/TopBar.vue';
+import ChatArea   from '@/components/ChatArea.vue';
+import PromptForm from '@/components/PromptForm.vue';
 import { useHistoryStore } from '../stores/useHistoryStore';
-import { useUiStore }      from '../stores/useUiStore';
+import { useUiStore } from '../stores/useUiStore';
 
-// Estado global
+/* ── Pinia stores ─────────────────────────────────────── */
+
+
+/* The shape expected by the History store */
+type Resultado = {
+  prompt: string;
+  response: { text?: string; imgUrl?: string };
+  type:    'chat' | 'art' | 'geo';
+  tags:    string[];
+  createdAt: string;
+};
+
 const ui   = useUiStore();
 const hist = useHistoryStore();
 
-// Controle de abertura do menu lateral em mobile
+/* Sidebar toggle (mobile) */
 const sidebarOpen = ref(false);
 
-// Função que lida com a geração de conteúdo (prompt)
-async function gerar({ prompt, tipo }: {prompt: string; tipo: 'art' | 'geo'}) {
-  const provisional = {
-    prompt,
-    type: tipo,
-    createdAt: new Date().toISOString(),
+/* PromptForm → ChatArea bridge
+   Creates a complete Resultado object so addLocal() type-checks OK */
+function onNewMessage(msg: { prompt: string; response: { text?: string; imgUrl?: string } }) {
+  const payload: Resultado = {
+    prompt: msg.prompt,
+    response: msg.response,
+    type: 'chat',          // default conversation type
     tags: [],
+    createdAt: new Date().toISOString()
   };
 
-  // Adiciona entrada local otimista antes da resposta da API
-  hist.addLocal(provisional as any);
-
-  ui.isLoading = true;
-  try {
-    // Requisição à API de geração
-    const res = await fetch(`/api/ia/${tipo}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(provisional),
-    });
-
-    // Mescla resposta da API no item provisório
-    Object.assign(provisional, await res.json());
-  } catch {
-    ui.showToast('Erro ao gerar');
-  } finally {
-    ui.isLoading = false;
-  }
+  hist.addLocal(payload);  // optimistic add; store will persist if authenticated
 }
 
-// Carrega histórico ao montar se ainda não estiver carregado
-onMounted(() => hist.itens.length || hist.fetch());
+/* Load history on first mount */
+onMounted(() => {
+  if (!hist.items.length) hist.fetch();
+});
 </script>
 
 <template>
-  <!-- Layout base com sidebar + área principal -->
   <div class="flex h-screen bg-slate-950 text-slate-100">
-    <!-- Menu lateral com histórico -->
+    <!-- Sidebar with history -->
     <Sidebar
       :open="sidebarOpen"
-      :itens="hist.itens"
+      :itens="hist.items"
       @close="sidebarOpen = false"
     />
 
-    <!-- Conteúdo principal -->
+    <!-- Main content -->
     <main class="flex flex-1 flex-col">
-      <!-- Barra superior com título e botão de menu (mobile) -->
       <TopBar @menu="sidebarOpen = true" />
 
-      <!-- Área de mensagens -->
-      <ChatArea :itens="hist.itens" />
+      <!-- Chat scroll area -->
+      <ChatArea :items="hist.items" />
 
-      <!-- Rodapé com formulário de prompt -->
+      <!-- Footer prompt form -->
       <footer class="border-t border-slate-700 bg-slate-950 p-4">
-        <PromptForm @gerar="gerar" />
+        <PromptForm @new-message="onNewMessage" />
       </footer>
     </main>
   </div>

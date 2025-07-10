@@ -1,34 +1,40 @@
 import { defineStore } from 'pinia';
 
-export interface Resultado {
+/** Single chat or generation entry shown in the UI */
+export interface HistoryItem {
     _id?: string;
     prompt: string;
-    type: 'art' | 'geo';
-    imgUrl?: string;
-    text?: string;
+    /** `chat` for GPT answers, `art` / `geo` for image / geo generations */
+    type: 'chat' | 'art' | 'geo';
+    response: {
+        text?: string;
+        imgUrl?: string;
+    };
     tags: string[];
     createdAt: string;
 }
 
 export const useHistoryStore = defineStore('history', {
     state: () => ({
-        itens: [] as Resultado[],
+        items: [] as HistoryItem[],
         loading: false
     }),
 
     actions: {
+        /** Load full history from the backend (if the user is authenticated) */
         async fetch() {
             this.loading = true;
             try {
                 const res = await fetch('/api/history');
-                this.itens = await res.json();
+                this.items = await res.json();
             } finally {
                 this.loading = false;
             }
         },
 
-        addLocal(r: Resultado) {
-            this.itens.unshift(r);
+        /** Push a new message locally so the UI updates instantly */
+        addLocal(item: HistoryItem) {
+            this.items.unshift(item);
         }
     }
 });
