@@ -4,7 +4,7 @@ export const useUiStore = defineStore('ui', {
     state: () => ({
         isLoading: false,
         toast: '' as string | null,
-        selectedModel: 'gpt-4o' as 'gpt-4o' | 'gpt-3.5' | 'geoai',
+        model: 'gpt-4o' as 'gpt-4o' | 'gpt-3.5' | 'geoai',
     }),
 
     actions: {
