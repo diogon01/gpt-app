@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently -k \"pnpm --filter web dev\" \"pnpm --filter api dev\"",
     "dev:web": "pnpm --filter web dev",
-    "dev:api": "pnpm --filter api dev"
+    "dev:api": "pnpm --filter api dev",
+    "debug:api": "ts-node --transpile-only apps/api/src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,8 @@
     "packages/*"
   ],
   "devDependencies": {
-    "concurrently": "^9.2.0"
+    "concurrently": "^9.2.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0"
   }
 }
