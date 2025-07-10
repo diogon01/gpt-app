@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onUpdated, ref } from 'vue';
 import MessageBubble from '@/components/MessageBubble.vue';
+import type { HistoryItem } from '../stores/useHistoryStore';
 
 const props = defineProps<{
-  items: { prompt: string; response: { text?: string; imgUrl?: string } }[];
+  items: HistoryItem[];
 }>();
 
 const end = ref<HTMLElement | null>(null);
@@ -17,6 +18,7 @@ onUpdated(() => end.value?.scrollIntoView({ behavior: 'smooth' }));
       :key="i"
       :prompt="m.prompt"
       :response="m.response"
+      :loading="m.loading"
     />
     <div ref="end" />
   </section>
