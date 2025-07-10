@@ -2,13 +2,12 @@
 import { ref } from 'vue';
 import { useUiStore } from '../stores/useUiStore';
 
-
 const emit = defineEmits<{
   'new-message': [{ prompt: string; response: { text?: string; imgUrl?: string } }];
 }>();
 
-const ui      = useUiStore();
-const prompt  = ref('');
+const ui = useUiStore();
+const prompt = ref('');
 const loading = ref(false);
 
 async function submit() {
@@ -17,41 +16,67 @@ async function submit() {
 
   try {
     const res = await fetch('/api/ia', {
-      method : 'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({ prompt: prompt.value, model: ui.model })
+      body: JSON.stringify({ prompt: prompt.value, model: ui.model })
     });
 
     const data = await res.json();
 
     const response: { text?: string; imgUrl?: string } = {};
-    if (data?.choices?.[0]?.message?.content) response.text  = data.choices[0].message.content;
-    if (data?.data?.[0]?.url)                  response.imgUrl = data.data[0].url;
+    if (data?.choices?.[0]?.message?.content) response.text = data.choices[0].message.content;
+    if (data?.data?.[0]?.url) response.imgUrl = data.data[0].url;
 
     emit('new-message', { prompt: prompt.value, response });
   } catch (err) {
     console.error('Request failed', err);
   } finally {
     loading.value = false;
-    prompt.value  = '';
+    prompt.value = '';
   }
 }
 </script>
 
 <template>
   <form @submit.prevent="submit"
-        class="mx-auto max-w-3xl space-y-3 md:space-y-0 md:flex md:items-start md:gap-2">
-    <textarea v-model="prompt"
-              rows="3"
-              placeholder="Digite seu prompt…"
-              class="flex-1 resize-none rounded border border-slate-700 bg-slate-800
-                     px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400" />
+        class="relative mx-auto max-w-6xl px-2">
+    <div class="relative">
+      <textarea v-model="prompt"
+                rows="3"
+                placeholder="Digite seu prompt…"
+                class="w-full resize-none rounded border border-slate-700 bg-slate-800
+                       px-4 py-3 pr-14 focus:outline-none focus:ring-2 focus:ring-cyan-400
+                       whitespace-pre-wrap break-words text-sm md:text-base" />
 
-    <button type="submit"
-            :disabled="loading"
-            class="h-fit rounded bg-cyan-400 px-4 py-2 font-semibold text-slate-950
-                   hover:brightness-110 disabled:opacity-50">
-      {{ loading ? 'Gerando…' : 'Gerar' }}
-    </button>
+      <!-- Botão de envio com SVG -->
+      <button type="submit"
+              :disabled="loading"
+              aria-label="Enviar"
+              class="absolute bottom-3 right-3 flex h-12 w-12 items-center justify-center
+                     rounded-full bg-cyan-400 text-black hover:brightness-110
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     shadow-md transition-all duration-150">
+        
+        <!-- Ícone SVG personalizado -->
+        <svg v-if="!loading"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          class="h-6 w-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12l7-7 7 7M12 5v13" />
+      </svg>
+
+
+        <!-- Spinner -->
+        <svg v-else class="h-5 w-5 animate-spin" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10"
+                  stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+      </button>
+    </div>
   </form>
 </template>
