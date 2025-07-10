@@ -1,70 +1,81 @@
 // apps/api/src/server.ts
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-
+import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
 import * as dotenv from 'dotenv';
+
 import { env } from './config/env';
 import { connectMongo } from './database';
-
 import routes from './routes';
-
+import { firebaseAuth } from './middleware/firebaseAuth';
 
 // ────────────────────────────────────────────────────────────
-// 1.  Carrega variáveis de ambiente (.env)
+// 1. Load environment variables from .env
 // ────────────────────────────────────────────────────────────
 dotenv.config();
 
 // ────────────────────────────────────────────────────────────
-// 2.  Inicializa app
+// 2. Initialize Express app
 // ────────────────────────────────────────────────────────────
 const app = express();
 
-// Segurança & utilitários
-app.use(helmet());                // cabeçalhos de segurança
-app.use(cors());                  // libera CORS - ajuste origin se precisar
-app.use(express.json());          // parse JSON
+// Apply security and utility middlewares
+app.use(helmet());               // sets security headers
+app.use(cors());                 // enable CORS - adjust origin if needed
+app.use(express.json());         // parse JSON requests
 
-// Limite global de 60 req/min por IP (ajuste conforme necessidade)
+// Global rate limit: 60 requests per minute per IP
 const limiter = rateLimit({
     windowMs: 60_000,
     max: 60,
     standardHeaders: true,
     legacyHeaders: false,
 });
-app.use(limiter);
+app.use(limiter as unknown as RequestHandler);
+
 
 // ────────────────────────────────────────────────────────────
-// 3.  Rotas
+// 3. Firebase Admin SDK initialization
 // ────────────────────────────────────────────────────────────
+import admin from 'firebase-admin';
 
-app.use('/api', routes);          // IA + demais endpoints
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.applicationDefault(), // use GOOGLE_APPLICATION_CREDENTIALS env var
+    });
+    console.log('✅ Firebase initialized');
+}
 
 // ────────────────────────────────────────────────────────────
-// 4.  Middleware de erro (captura finais)
+// 4. Apply custom Firebase authentication middleware
 // ────────────────────────────────────────────────────────────
+app.use(firebaseAuth); // attaches req.user if a valid token is found
 
+// ────────────────────────────────────────────────────────────
+// 5. Routes
+// ────────────────────────────────────────────────────────────
+app.use('/api', routes); // main API entrypoint
 
+// ────────────────────────────────────────────────────────────
+// 6. Global error handler (fallback)
+// ────────────────────────────────────────────────────────────
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     console.error(err);
     res.status(err.status || 500).json({ error: err.message || 'Internal error' });
 });
 
 // ────────────────────────────────────────────────────────────
-// 5.  Conecta ao MongoDB e inicia servidor
+// 7. Connect to MongoDB and start server
 // ────────────────────────────────────────────────────────────
-const PORT = Number(process.env.PORT) || 3000;
-const MONGO_URI = process.env.MONGODB_URI || '';
-
 async function startServer() {
     try {
-        await connectMongo(); // Conecta ao MongoDB com URI validada
+        await connectMongo(); // validates and connects to MongoDB
         app.listen(env.port, () => {
-            console.log(`🚀 API pronta → http://localhost:${env.port}`);
+            console.log(`🚀 API running at → http://localhost:${env.port}`);
         });
     } catch (err) {
-        console.error('❌ Falha ao iniciar servidor:', err);
+        console.error('❌ Failed to start server:', err);
         process.exit(1);
     }
 }
