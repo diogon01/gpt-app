@@ -1,22 +1,45 @@
+// apps/api/src/config/mongo.ts
+
+import { MongoClient } from 'mongodb';
 import { env } from './env';
 
-const missingVars: string[] = [];
+const missing: string[] = [];
+if (!env.mongoUser) missing.push('MONGO_USER');
+if (!env.mongoPass) missing.push('MONGO_PASS');
+if (!env.mongoHost) missing.push('MONGO_HOST');
+if (!env.mongoPort) missing.push('MONGO_PORT');
+if (!env.mongoParams) missing.push('MONGO_PARAMS');
+if (!env.mongoApp) missing.push('MONGO_APP');
 
-if (!env.mongoUser) missingVars.push('MONGO_USER');
-if (!env.mongoPass) missingVars.push('MONGO_PASS');
-if (!env.mongoHost) missingVars.push('MONGO_HOST');
-if (!env.mongoPort) missingVars.push('MONGO_PORT');
-if (!env.mongoParams) missingVars.push('MONGO_PARAMS');
-if (!env.mongoApp) missingVars.push('MONGO_APP');
-
-if (missingVars.length > 0) {
-    throw new Error(`⚠️  Variáveis ausentes no .env: ${missingVars.join(', ')}`);
+if (missing.length) {
+    throw new Error(`⚠️ Missing .env vars: ${missing.join(', ')}`);
 }
 
-export const mongoUri = (() => {
-    const encodedPass = encodeURIComponent(env.mongoPass);
-    const credentials = `${env.mongoUser}:${encodedPass}`;
-    const hostPort = `${env.mongoHost}:${env.mongoPort}`;
-    const tail = `${env.mongoParams}&appName=${env.mongoApp}`;
-    return `mongodb://${credentials}@${hostPort}/${tail}`;
+const uri = (() => {
+    const encoded = encodeURIComponent(env.mongoPass);
+    return `mongodb://${env.mongoUser}:${encoded}@${env.mongoHost}:${env.mongoPort}/${env.mongoParams}&appName=${env.mongoApp}`;
 })();
+
+let client: MongoClient | null = null;
+
+/** Returns a cached MongoClient (connects once). */
+export async function getMongoClient(): Promise<MongoClient> {
+    if (!client) {
+        client = new MongoClient(uri, {
+            useNewUrlParser: true,          // compatibilidade
+            useUnifiedTopology: true,       // desativa monitoramento legado
+            tls: true,                      // Cosmos DB requer TLS
+        } as any); // cast necessário em drivers mais antigos
+
+        await client.connect();
+        console.log('✅ MongoDB connected');
+
+        // Graceful shutdown
+        process.on('SIGINT', async () => {
+            await client?.close();
+            console.log('\n👋 Mongo connection closed (SIGINT)');
+            process.exit(0);
+        });
+    }
+    return client;
+}

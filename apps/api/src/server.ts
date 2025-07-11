@@ -6,7 +6,7 @@ import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
 import * as dotenv from 'dotenv';
 
 import { env } from './config/env';
-import { connectMongo } from './database';
+import { getMongoClient } from './config/mongo';
 import routes from './routes';
 import { firebaseAuth } from './middleware/firebaseAuth';
 
@@ -70,7 +70,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 // ────────────────────────────────────────────────────────────
 async function startServer() {
     try {
-        await connectMongo(); // validates and connects to MongoDB
+        await getMongoClient();               // 👈 singleton connects once
         app.listen(env.port, () => {
             console.log(`🚀 API running at → http://localhost:${env.port}`);
         });

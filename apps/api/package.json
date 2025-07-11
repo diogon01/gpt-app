@@ -9,12 +9,15 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@42robotics/domain": "workspace:*",
     "cors": "^2.8.5",
     "dotenv": "^17.1.0",
     "express": "^5.1.0",
     "express-rate-limit": "^6.11.2",
+    "firebase": "^9.23.0",
     "firebase-admin": "^13.4.0",
     "helmet": "^8.1.0",
+    "mongodb": "4.10.0",
     "mongoose": "^6.13.8",
     "openai": "^5.8.3"
   },
