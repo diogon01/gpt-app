@@ -20,6 +20,7 @@ export const env = {
     mongoParams: process.env.MONGO_PARAMS ||
         '?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000',
     mongoApp: process.env.MONGO_APP || '',
+    mongoDatabase: process.env.MONGO_DATABASE || '',
 
     /* ───────── Firebase (opcional) ───────── */
     fbProjectId: process.env.FB_PROJECT_ID || '',

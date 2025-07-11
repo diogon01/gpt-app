@@ -1,8 +1,11 @@
-// apps/api/src/controllers/auth.controller.ts
 import { RequestHandler } from 'express';
 import admin from 'firebase-admin';
 import { getMongoClient } from '../config/mongo';
-import type { CreateUserDTO, AuthTokens } from '@42robotics/domain';
+import {
+    CreateUserDTO,
+    AuthTokens,
+    AuthProvider,
+} from '@42robotics/domain';
 
 /**
  * Handles syncing the Firebase user with MongoDB
@@ -12,7 +15,7 @@ export const handleAuthSync: RequestHandler = async (req, res, next) => {
         const authHeader = req.headers.authorization;
         if (!authHeader?.startsWith('Bearer ')) {
             res.status(401).json({ error: 'Missing or invalid Authorization header' });
-            return;                           // <- agora o retorno é void
+            return;
         }
 
         const idToken = authHeader.split(' ')[1];
@@ -34,7 +37,7 @@ export const handleAuthSync: RequestHandler = async (req, res, next) => {
         };
 
         const rawProvider = provider.toLowerCase();
-        if (rawProvider !== 'google.com' && rawProvider !== 'microsoft.com') {
+        if (rawProvider !== AuthProvider.GOOGLE && rawProvider !== AuthProvider.MICROSOFT) {
             throw new Error(`Unsupported provider: ${rawProvider}`);
         }
 
@@ -43,7 +46,7 @@ export const handleAuthSync: RequestHandler = async (req, res, next) => {
             displayName: name,
             email,
             photoURL,
-            provider: rawProvider as 'google.com' | 'microsoft.com',
+            provider: rawProvider as AuthProvider,
             federatedId,
             emailVerified,
             isPlus: false,
@@ -51,9 +54,8 @@ export const handleAuthSync: RequestHandler = async (req, res, next) => {
             rawProviderInfo,
         };
 
-        const client = await getMongoClient();
-        const db = client.db();
-        const users = db.collection('users_42r_prod');
+        const db = await getMongoClient();
+        const users = db.collection('42r_users_prod');
         const existing = await users.findOne({ uid });
 
         if (!existing) {
@@ -67,9 +69,9 @@ export const handleAuthSync: RequestHandler = async (req, res, next) => {
             await users.updateOne({ uid }, { $set: { updatedAt: new Date() } });
         }
 
-        res.status(200).json({ ok: true });   // envia e não retorna Response
+        res.status(200).json({ ok: true });
     } catch (error) {
         console.error('❌ Auth sync error:', error);
-        next(error);                          // Express central error handler
+        next(error);
     }
 };

@@ -20,6 +20,7 @@ async function syncUserWithBackend() {
       'Authorization': `Bearer ${idToken}`,
       'Content-Type' : 'application/json',
     },
+    body: JSON.stringify({ service: 'ia' }),
   });
 }
 

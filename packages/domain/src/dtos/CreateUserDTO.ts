@@ -1,9 +1,10 @@
 import { AuthTokens } from '../entities/AuthTokens';
+import { AuthProvider } from '../enums/AuthProvider';
 
 export interface CreateUserDTO {
     uid: string;
     federatedId: string;
-    provider: 'google.com' | 'microsoft.com';
+    provider: AuthProvider;
     email: string;
     emailVerified: boolean;
     displayName: string;

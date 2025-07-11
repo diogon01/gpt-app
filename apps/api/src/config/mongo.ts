@@ -1,6 +1,5 @@
 // apps/api/src/config/mongo.ts
-
-import { MongoClient } from 'mongodb';
+import { MongoClient, Db } from 'mongodb';
 import { env } from './env';
 
 const missing: string[] = [];
@@ -10,6 +9,7 @@ if (!env.mongoHost) missing.push('MONGO_HOST');
 if (!env.mongoPort) missing.push('MONGO_PORT');
 if (!env.mongoParams) missing.push('MONGO_PARAMS');
 if (!env.mongoApp) missing.push('MONGO_APP');
+if (!env.mongoDatabase) missing.push('MONGO_DATABASE');
 
 if (missing.length) {
     throw new Error(`⚠️ Missing .env vars: ${missing.join(', ')}`);
@@ -20,26 +20,19 @@ const uri = (() => {
     return `mongodb://${env.mongoUser}:${encoded}@${env.mongoHost}:${env.mongoPort}/${env.mongoParams}&appName=${env.mongoApp}`;
 })();
 
-let client: MongoClient | null = null;
+let db: Db | null = null;
 
-/** Returns a cached MongoClient (connects once). */
-export async function getMongoClient(): Promise<MongoClient> {
-    if (!client) {
-        client = new MongoClient(uri, {
-            useNewUrlParser: true,          // compatibilidade
-            useUnifiedTopology: true,       // desativa monitoramento legado
-            tls: true,                      // Cosmos DB requer TLS
-        } as any); // cast necessário em drivers mais antigos
-
+/** Returns a cached Mongo DB instance */
+export async function getMongoClient(): Promise<Db> {
+    if (!db) {
+        const client = new MongoClient(uri, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            tls: true,
+        } as any);
         await client.connect();
-        console.log('🗄️\u2009 MongoDB conectado');
-
-        // Graceful shutdown
-        process.on('SIGINT', async () => {
-            await client?.close();
-            console.log('\n👋 Mongo connection closed (SIGINT)');
-            process.exit(0);
-        });
+        db = client.db(env.mongoDatabase); // ✅ conecta diretamente ao banco correto
+        console.log(`🗄️ MongoDB connected to "${env.mongoDatabase}"`);
     }
-    return client;
+    return db;
 }
