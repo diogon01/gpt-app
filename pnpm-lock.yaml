@@ -66,6 +66,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@42robotics/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       axios:
         specifier: ^1.7.3
         version: 1.10.0
@@ -121,6 +124,8 @@ importers:
       vue-tsc:
         specifier: ^2.2.12
         version: 2.2.12(typescript@5.8.3)
+
+  packages/domain: {}
 
 packages:
 
