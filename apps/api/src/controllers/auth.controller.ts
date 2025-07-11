@@ -1,15 +1,13 @@
 import { RequestHandler } from 'express';
 import admin from 'firebase-admin';
-import { getMongoClient } from '../config/mongo';
 import {
     CreateUserDTO,
     AuthTokens,
     AuthProvider,
+    ServiceName,
 } from '@42robotics/domain';
+import { UserService } from '../services/user.service';
 
-/**
- * Handles syncing the Firebase user with MongoDB
- */
 export const handleAuthSync: RequestHandler = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
@@ -54,20 +52,9 @@ export const handleAuthSync: RequestHandler = async (req, res, next) => {
             rawProviderInfo,
         };
 
-        const db = await getMongoClient();
-        const users = db.collection('42r_users_prod');
-        const existing = await users.findOne({ uid });
+        const service: ServiceName = req.body?.service || ServiceName.IA;
 
-        if (!existing) {
-            await users.insertOne({
-                ...newUser,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-            console.log(`👤 User created in MongoDB: ${email}`);
-        } else {
-            await users.updateOne({ uid }, { $set: { updatedAt: new Date() } });
-        }
+        await UserService.upsertUser(newUser, service);
 
         res.status(200).json({ ok: true });
     } catch (error) {
