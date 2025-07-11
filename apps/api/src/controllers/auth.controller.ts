@@ -34,7 +34,7 @@ export const handleAuthSync: RequestHandler = async (req, res, next) => {
         };
 
         const rawProvider = provider.toLowerCase();
-        if (rawProvider !== 'google' && rawProvider !== 'microsoft') {
+        if (rawProvider !== 'google.com' && rawProvider !== 'microsoft.com') {
             throw new Error(`Unsupported provider: ${rawProvider}`);
         }
 
@@ -43,7 +43,7 @@ export const handleAuthSync: RequestHandler = async (req, res, next) => {
             displayName: name,
             email,
             photoURL,
-            provider: rawProvider as 'google' | 'microsoft',
+            provider: rawProvider as 'google.com' | 'microsoft.com',
             federatedId,
             emailVerified,
             isPlus: false,
@@ -53,7 +53,7 @@ export const handleAuthSync: RequestHandler = async (req, res, next) => {
 
         const client = await getMongoClient();
         const db = client.db();
-        const users = db.collection('users');
+        const users = db.collection('users_42r_prod');
         const existing = await users.findOne({ uid });
 
         if (!existing) {

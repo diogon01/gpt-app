@@ -1,31 +1,29 @@
 // apps/api/src/server.ts
+import * as dotenv from 'dotenv';
+dotenv.config(); // ✅ carregue as variáveis primeiro
+
+// ✅ inicializa o Firebase Admin corretamente (com .env validado)
+import './config/firebaseAdmin';
+
 import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
-import * as dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 
 import { env } from './config/env';
 import { getMongoClient } from './config/mongo';
 import routes from './routes';
 import { firebaseAuth } from './middleware/firebaseAuth';
 
-// ────────────────────────────────────────────────────────────
-// 1. Load environment variables from .env
-// ────────────────────────────────────────────────────────────
-dotenv.config();
-
-// ────────────────────────────────────────────────────────────
-// 2. Initialize Express app
-// ────────────────────────────────────────────────────────────
 const app = express();
 
-// Apply security and utility middlewares
-app.use(helmet());               // sets security headers
-app.use(cors());                 // enable CORS - adjust origin if needed
-app.use(express.json());         // parse JSON requests
+// ────────────────────────────────────────────────────────────
+// 1. Middlewares globais
+// ────────────────────────────────────────────────────────────
+app.use(helmet());               // segurança
+app.use(cors());                 // CORS
+app.use(express.json());         // parser JSON
 
-// Global rate limit: 60 requests per minute per IP
 const limiter = rateLimit({
     windowMs: 60_000,
     max: 60,
@@ -34,31 +32,18 @@ const limiter = rateLimit({
 });
 app.use(limiter as unknown as RequestHandler);
 
+// ────────────────────────────────────────────────────────────
+// 2. Firebase Auth Middleware
+// ────────────────────────────────────────────────────────────
+app.use(firebaseAuth);
 
 // ────────────────────────────────────────────────────────────
-// 3. Firebase Admin SDK initialization
+// 3. Rotas da API
 // ────────────────────────────────────────────────────────────
-import admin from 'firebase-admin';
-
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.applicationDefault(), // use GOOGLE_APPLICATION_CREDENTIALS env var
-    });
-    console.log('✅ Firebase initialized');
-}
+app.use('/api', routes);
 
 // ────────────────────────────────────────────────────────────
-// 4. Apply custom Firebase authentication middleware
-// ────────────────────────────────────────────────────────────
-app.use(firebaseAuth); // attaches req.user if a valid token is found
-
-// ────────────────────────────────────────────────────────────
-// 5. Routes
-// ────────────────────────────────────────────────────────────
-app.use('/api', routes); // main API entrypoint
-
-// ────────────────────────────────────────────────────────────
-// 6. Global error handler (fallback)
+// 4. Global Error Handler
 // ────────────────────────────────────────────────────────────
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     console.error(err);
@@ -66,11 +51,11 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 // ────────────────────────────────────────────────────────────
-// 7. Connect to MongoDB and start server
+// 5. Conexão com Mongo e Inicialização do Servidor
 // ────────────────────────────────────────────────────────────
 async function startServer() {
     try {
-        await getMongoClient();               // 👈 singleton connects once
+        await getMongoClient();
         app.listen(env.port, () => {
             console.log(`🚀 API running at → http://localhost:${env.port}`);
         });

@@ -3,7 +3,7 @@ import { AuthTokens } from '../entities/AuthTokens';
 export interface CreateUserDTO {
     uid: string;
     federatedId: string;
-    provider: 'google' | 'microsoft';
+    provider: 'google.com' | 'microsoft.com';
     email: string;
     emailVerified: boolean;
     displayName: string;

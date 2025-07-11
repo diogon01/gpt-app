@@ -2,12 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
 import { User } from '../models/User';
 
-// Initialise once at app start-up
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.applicationDefault(),
-    });
-}
+// ✅ Removido o bloco de initializeApp – a inicialização é feita em config/firebaseAdmin.ts
 
 /**
  * Reads `Authorization: Bearer <ID_TOKEN>` and verifies it with Firebase.

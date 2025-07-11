@@ -32,7 +32,7 @@ export async function getMongoClient(): Promise<MongoClient> {
         } as any); // cast necessário em drivers mais antigos
 
         await client.connect();
-        console.log('✅ MongoDB connected');
+        console.log('🗄️\u2009 MongoDB conectado');
 
         // Graceful shutdown
         process.on('SIGINT', async () => {
