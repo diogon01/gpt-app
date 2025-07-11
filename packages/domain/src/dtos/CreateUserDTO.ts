@@ -1,9 +1,17 @@
-// packages/domain/src/dtos/CreateUserDTO.ts
+import { AuthTokens } from '../entities/AuthTokens';
 
 export interface CreateUserDTO {
     uid: string;
-    email: string;
-    displayName: string;
-    photoURL?: string;
+    federatedId: string;
     provider: 'google' | 'microsoft';
+    email: string;
+    emailVerified: boolean;
+    displayName: string;
+    firstName?: string;
+    lastName?: string;
+    photoURL?: string;
+    isPlus: boolean;
+
+    tokens: AuthTokens;
+    rawProviderInfo?: string;
 }

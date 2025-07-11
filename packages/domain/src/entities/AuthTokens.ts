@@ -1,9 +1,9 @@
-// packages/domain/src/entities/AuthTokens.ts
 export interface AuthTokens {
-    idToken: string;
+    idToken?: string;
+    accessToken?: string;         // <- adicionado
     refreshToken: string;
-    expiresIn: number;          // seconds
+    expiresIn: number;
     oauthAccessToken?: string;
     oauthIdToken?: string;
-    oauthExpireIn?: number;     // seconds
+    oauthExpireIn?: number;
 }

@@ -15,7 +15,7 @@ import {
 import {
     getFirestore,
     doc,
-    getDoc
+    getDoc,
 } from 'firebase/firestore';
 
 /* -------------------------------------------------------------------------- */
@@ -41,7 +41,7 @@ export interface MyUser {
     email: string;
     photoURL?: string;
     provider: 'google' | 'microsoft';
-    isPlus: boolean; // Added field for plan status
+    isPlus: boolean;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -50,6 +50,7 @@ export interface MyUser {
 export const useAuth = defineStore('auth', {
     state: () => ({
         user: null as MyUser | null,
+        firebaseUser: null as FirebaseUser | null, // ✅ armazenar FirebaseUser
         loading: true,
     }),
 
@@ -75,6 +76,7 @@ export const useAuth = defineStore('auth', {
          */
         async loginGoogle() {
             const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+            this.firebaseUser = cred.user; // ✅ salva o firebaseUser
             this.user = await this.mapUser(cred.user, 'google');
         },
 
@@ -84,6 +86,7 @@ export const useAuth = defineStore('auth', {
         async loginMicrosoft() {
             const provider = new OAuthProvider('microsoft.com');
             const cred = await signInWithPopup(auth, provider);
+            this.firebaseUser = cred.user; // ✅ salva o firebaseUser
             this.user = await this.mapUser(cred.user, 'microsoft');
         },
 
@@ -93,6 +96,7 @@ export const useAuth = defineStore('auth', {
         async logout() {
             await signOut(auth);
             this.user = null;
+            this.firebaseUser = null;
         },
 
         /**
@@ -104,6 +108,7 @@ export const useAuth = defineStore('auth', {
 
                 if (!fbUser) {
                     this.user = null;
+                    this.firebaseUser = null;
                     return;
                 }
 
@@ -111,6 +116,7 @@ export const useAuth = defineStore('auth', {
                     ? 'google'
                     : 'microsoft';
 
+                this.firebaseUser = fbUser; // ✅ persiste após refresh
                 this.user = await this.mapUser(fbUser, providerId as MyUser['provider']);
             });
         },
