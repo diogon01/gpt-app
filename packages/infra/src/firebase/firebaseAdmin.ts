@@ -1,6 +1,6 @@
 // apps/api/src/config/firebaseAdmin.ts
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import * as serviceAccount from '../config/firebase/agro42-service-account.json';
+import * as serviceAccount from './agro42-service-account.json';
 
 if (!getApps().length) {
     initializeApp({
