@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 import { openai } from '@42robotics/infra/src/config/openai';
-import { PromptResult } from '../models/PromptResult';
+import { PromptResult } from '@42robotics/infra/src/database/models/prompt-result.model';
 import { generateChatCompletion } from '../services/openai.service';
 
 export const handleIA: RequestHandler = async (req, res, next) => {

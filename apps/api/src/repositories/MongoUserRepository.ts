@@ -1,18 +1,21 @@
-import { getMongoClient } from '@42robotics/infra/src/database/config/mongoClient';
-import { ServiceName, UserRepository } from '@42robotics/domain';
-import { CreateUserDTO } from '@42robotics/domain';
-import { MongoUser } from '@42robotics/domain';
-import { SubscriptionPlan } from '@42robotics/domain';
-import { SubscriptionStatus } from '@42robotics/domain';
-import { SubscriptionEvent } from '@42robotics/domain';
+import {
+    CreateUserDTO,
+    MongoUser,
+    ServiceName,
+    SubscriptionPlan,
+    SubscriptionStatus,
+    SubscriptionEvent,
+    UserRepository
+} from '@42robotics/domain';
+
+import { getMongoClient } from '@42robotics/infra/src/config/mongoClient';
 
 export class MongoUserRepository implements UserRepository {
-    private readonly collectionName = '42r_users_prod';
+    private readonly collectionName = process.env.MONGO_USERS_COLLECTION ?? '42r_users_prod';
 
     async findByUid(uid: string): Promise<MongoUser | null> {
         const db = await getMongoClient();
-        const user = await db.collection<MongoUser>(this.collectionName).findOne({ uid });
-        return user;
+        return db.collection<MongoUser>(this.collectionName).findOne({ uid });
     }
 
     async create(data: CreateUserDTO, service: ServiceName): Promise<MongoUser> {
@@ -52,7 +55,7 @@ export class MongoUserRepository implements UserRepository {
 
     async updateToken(uid: string, token: string): Promise<void> {
         const db = await getMongoClient();
-        await db.collection(this.collectionName).updateOne(
+        const result = await db.collection(this.collectionName).updateOne(
             { uid },
             {
                 $set: {
@@ -61,5 +64,9 @@ export class MongoUserRepository implements UserRepository {
                 },
             }
         );
+
+        if (result.matchedCount === 0) {
+            console.warn(`⚠️ No user found with uid=${uid} to update token`);
+        }
     }
 }
