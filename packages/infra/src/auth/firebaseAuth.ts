@@ -1,8 +1,8 @@
+// packages/infra/src/auth/firebaseAuth.ts
 import { Request, Response, NextFunction } from 'express';
-import admin from 'firebase-admin';
-import { User } from '../database/models/user.model';
 import { AuthenticatedRequest, FirebaseDecodedToken } from '../types/firebase';
-
+import { admin } from './firebaseAdmin';
+import { getMongoClient } from '../config/mongoClient';
 
 /**
  * Middleware to authenticate Firebase token from Authorization header.
@@ -21,7 +21,6 @@ export async function firebaseAuth(
     try {
         const decoded = (await admin.auth().verifyIdToken(idToken)) as FirebaseDecodedToken;
 
-        // Anexar ao request para uso posterior
         req.user = {
             id: decoded.uid,
             email: decoded.email!,
@@ -29,23 +28,33 @@ export async function firebaseAuth(
             picture: decoded.picture,
         };
 
-        // Proteção extra
         if (!decoded.email || !decoded.name) return next();
 
-        // Upsert do usuário no MongoDB (via Mongoose)
-        await User.findOneAndUpdate(
+        // ✅ Usa client nativo, evitando buffering do Mongoose
+        const db = await getMongoClient();
+        const users = db.collection('42r_users_prod');
+
+        console.log('✅ Firebase user decoded:', decoded.uid);
+
+        await users.updateOne(
             { firebaseUid: decoded.uid },
             {
-                firebaseUid: decoded.uid,
-                federatedId: decoded.firebase?.identities?.['google.com']?.[0] ?? '',
-                providerId: decoded.firebase?.sign_in_provider ?? '',
-                email: decoded.email,
-                emailVerified: decoded.email_verified ?? false,
-                fullName: decoded.name,
-                photoUrl: decoded.picture,
-                lastLogin: new Date(),
+                $set: {
+                    firebaseUid: decoded.uid,
+                    federatedId: decoded.firebase?.identities?.['google.com']?.[0] ?? '',
+                    providerId: decoded.firebase?.sign_in_provider ?? '',
+                    email: decoded.email,
+                    emailVerified: decoded.email_verified ?? false,
+                    fullName: decoded.name,
+                    photoUrl: decoded.picture,
+                    lastLogin: new Date(),
+                    updatedAt: new Date(),
+                },
+                $setOnInsert: {
+                    createdAt: new Date(),
+                },
             },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
+            { upsert: true }
         );
     } catch (err) {
         console.warn('⚠️ Firebase auth failed:', (err as Error).message);
