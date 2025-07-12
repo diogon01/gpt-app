@@ -1,13 +1,8 @@
-// packages/infra/src/auth/firebaseAuth.ts
-import { Request, Response, NextFunction } from 'express';
-import { AuthenticatedRequest, FirebaseDecodedToken } from '../types/firebase';
-import { admin } from './firebaseAdmin';
-import { getMongoClient } from '../config/mongoClient';
+import { NextFunction } from "express";
+import { AuthenticatedRequest, FirebaseDecodedToken } from "../types/firebase";
+import { admin } from "./firebaseAdmin";
 
-/**
- * Middleware to authenticate Firebase token from Authorization header.
- * Adds `req.user` if valid.
- */
+// packages/infra/src/auth/firebaseAuth.ts
 export async function firebaseAuth(
     req: AuthenticatedRequest,
     _res: Response,
@@ -28,34 +23,7 @@ export async function firebaseAuth(
             picture: decoded.picture,
         };
 
-        if (!decoded.email || !decoded.name) return next();
-
-        // ✅ Usa client nativo, evitando buffering do Mongoose
-        const db = await getMongoClient();
-        const users = db.collection('42r_users_prod');
-
         console.log('✅ Firebase user decoded:', decoded.uid);
-
-        await users.updateOne(
-            { firebaseUid: decoded.uid },
-            {
-                $set: {
-                    firebaseUid: decoded.uid,
-                    federatedId: decoded.firebase?.identities?.['google.com']?.[0] ?? '',
-                    providerId: decoded.firebase?.sign_in_provider ?? '',
-                    email: decoded.email,
-                    emailVerified: decoded.email_verified ?? false,
-                    fullName: decoded.name,
-                    photoUrl: decoded.picture,
-                    lastLogin: new Date(),
-                    updatedAt: new Date(),
-                },
-                $setOnInsert: {
-                    createdAt: new Date(),
-                },
-            },
-            { upsert: true }
-        );
     } catch (err) {
         console.warn('⚠️ Firebase auth failed:', (err as Error).message);
     }

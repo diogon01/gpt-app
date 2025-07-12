@@ -9,47 +9,57 @@ import { getMongoClient } from '@42robotics/infra/src/config/mongoClient';
 
 export class UserService {
     static async upsertUser(data: CreateUserDTO, service: ServiceName) {
-
         const db = await getMongoClient();
         const users = db.collection('42r_users_prod');
-        const existing = await users.findOne({ uid: data.uid });
 
+        const now = new Date();
 
-        if (!existing) {
-            await users.insertOne({
-                ...data,
-                subscriptions: {
-                    [service]: {
-                        plan: SubscriptionPlan.FREE,
-                        status: SubscriptionStatus.ACTIVE,
-                        startedAt: new Date(),
-                        expiresAt: null
-                    },
-                },
-                roles: ['client'],
-                metadata: {
-                    lastLogin: new Date(),
-                },
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
+        // ⚠️ Garante que o nome do serviço é seguro para ser usado como chave
+        if (service.includes('.')) {
+            throw new Error(`Invalid service name: "${service}"`);
+        }
+
+        const set: any = {
+            email: data.email,
+            displayName: data.displayName,
+            photoURL: data.photoURL,
+            provider: data.provider,
+            federatedId: data.federatedId,
+            emailVerified: data.emailVerified,
+            isPlus: data.isPlus,
+            rawProviderInfo: data.rawProviderInfo,
+            metadata: { lastLogin: now },
+            updatedAt: now,
+        };
+
+        const setOnInsert: any = {
+            uid: data.uid,
+            tokens: data.tokens,
+            roles: ['client'],
+            createdAt: now,
+        };
+
+        // Atribui dinamicamente os campos da assinatura
+        set[`subscriptions.${service}.status`] = SubscriptionStatus.ACTIVE;
+        set[`subscriptions.${service}.updatedAt`] = now;
+
+        setOnInsert[`subscriptions.${service}.plan`] = SubscriptionPlan.FREE;
+        setOnInsert[`subscriptions.${service}.startedAt`] = now;
+        setOnInsert[`subscriptions.${service}.expiresAt`] = null;
+
+        const result = await users.updateOne(
+            { uid: data.uid },
+            {
+                $set: set,
+                $setOnInsert: setOnInsert,
+            },
+            { upsert: true }
+        );
+
+        if (result.upsertedCount > 0) {
             console.log(`👤 New user inserted [${service}]: ${data.email}`);
         } else {
-            await users.updateOne(
-                { uid: data.uid },
-                {
-                    $set: {
-                        [`subscriptions.${service}.status`]: SubscriptionStatus.ACTIVE,
-                        [`subscriptions.${service}.updatedAt`]: new Date(),
-                        'metadata.lastLogin': new Date(),
-                        updatedAt: new Date(),
-                    },
-                    $setOnInsert: {
-                        [`subscriptions.${service}.startedAt`]: new Date(),
-                    },
-                },
-                { upsert: true }
-            );
+            console.log(`🔁 Existing user updated [${service}]: ${data.email}`);
         }
     }
 }
