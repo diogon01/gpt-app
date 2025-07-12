@@ -30,6 +30,9 @@ importers:
       '@42robotics/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@42robotics/infra':
+        specifier: workspace:*
+        version: link:../../packages/infra
       cors:
         specifier: ^2.8.5
         version: 2.8.5

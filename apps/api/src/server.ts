@@ -13,7 +13,10 @@ import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
 import { getMongoClient } from './config/mongo';
 import routes from './routes';
-import { firebaseAuth } from '../../../packages/infra/src/auth/firebaseAuth';
+import { firebaseAuth } from '@42robotics/infra'
+
+
+
 
 const app = express();
 
