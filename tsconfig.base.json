@@ -9,8 +9,11 @@
         "skipLibCheck": true,
         "baseUrl": ".",
         "paths": {
-            "@42robotics/domain": [
-                "packages/domain/src"
+            "@42robotics/domain/*": [
+                "packages/domain/src/*"
+            ],
+            "@42robotics/infra/*": [
+                "packages/infra/src/*"
             ]
         }
     }

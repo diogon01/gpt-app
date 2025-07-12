@@ -1,0 +1,31 @@
+{
+    "name": "@42robotics/infra",
+    "version": "1.0.0",
+    "description": "Shared infrastructure layer for the 42Robotics application",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc --build",
+        "clean": "rimraf dist"
+    },
+    "keywords": [
+        "infra",
+        "firebase",
+        "mongodb",
+        "shared",
+        "typescript"
+    ],
+    "author": "42 Robotics <contato@42robotics.com.br>",
+    "license": "MIT",
+    "private": true,
+    "dependencies": {
+        "express": "^5.1.0",
+        "firebase-admin": "^11.11.1",
+        "mongodb": "^6.17.0",
+        "mongoose": "^6.13.8"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.3",
+        "@types/mongoose": "^5.11.97"
+    }
+}
