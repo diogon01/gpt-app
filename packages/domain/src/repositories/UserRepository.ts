@@ -1,8 +1,13 @@
-import { CreateUserDTO } from "../dtos/CreateUserDTO";
-import { User } from "../entities/User";
+// packages/domain/src/repositories/UserRepository.ts
 
+import { CreateUserDTO } from '../dtos/CreateUserDTO';
+import { MongoUser } from '../entities/MongoUser';
+
+/**
+ * Contract for user persistence operations.
+ */
 export interface UserRepository {
-    findByUid(uid: string): Promise<User | null>;
-    create(data: CreateUserDTO): Promise<User>;
+    findByUid(uid: string): Promise<MongoUser | null>;
+    create(data: CreateUserDTO, service: string): Promise<MongoUser>;
     updateToken(uid: string, token: string): Promise<void>;
 }

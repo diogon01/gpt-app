@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 export * from './entities/User';
 export * from './entities/AuthTokens';
+export * from './entities/MongoUser';
 
 // ─────────────────────────────────────────────────────────────
 // Data Transfer Objects used for input/output validation
@@ -28,3 +29,4 @@ export * from './enums/AuthProvider';
 export * from './enums/SubscriptionPlan';
 export * from './enums/SubscriptionStatus';
 export * from './enums/ServiceName';
+export * from './enums/SubscriptionEvent'

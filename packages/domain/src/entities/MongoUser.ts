@@ -1,24 +1,24 @@
-// packages/domain/src/dtos/CreateUserDTO.ts
+// packages/domain/src/entities/MongoUser.ts
 
-import { AuthTokens } from '../entities/AuthTokens';
 import { AuthProvider } from '../enums/AuthProvider';
 import { SubscriptionPlan } from '../enums/SubscriptionPlan';
 import { SubscriptionStatus } from '../enums/SubscriptionStatus';
 import { SubscriptionEvent } from '../enums/SubscriptionEvent';
 import { ServiceName } from '../enums/ServiceName';
+import { AuthTokens } from './AuthTokens';
 
 /**
- * DTO used for creating a new user in the system.
+ * MongoDB user document structure used internally.
  */
-export interface CreateUserDTO {
+export interface MongoUser {
+    _id?: any; // MongoDB ObjectId
     uid: string;
     federatedId: string;
     provider: AuthProvider;
     email: string;
     emailVerified: boolean;
     displayName: string;
-    fullName?: string; // Optional full name (e.g., for admin reports)
-
+    fullName?: string;
     firstName?: string;
     lastName?: string;
     photoURL?: string;
@@ -27,7 +27,7 @@ export interface CreateUserDTO {
     tokens: AuthTokens;
     rawProviderInfo?: string;
 
-    subscriptions?: {
+    subscriptions: {
         [service in ServiceName]?: {
             plan: SubscriptionPlan;
             status: SubscriptionStatus;
@@ -36,19 +36,21 @@ export interface CreateUserDTO {
         };
     };
 
-    subscriptionLogs?: {
+    subscriptionLogs: {
         timestamp: Date;
         event: SubscriptionEvent;
         service: ServiceName;
+        plan: SubscriptionPlan
         details?: Record<string, any>;
+
     }[];
 
-    roles?: string[];
-    metadata?: {
+    roles: string[];
+    metadata: {
         lastLogin: Date;
         [key: string]: any;
     };
 
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
