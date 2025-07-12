@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
-import { User } from '../database/models/User';
-import { FirebaseDecodedToken, AuthenticatedRequest } from '../types/firebase';
+import { User } from '../database/models/user.model';
+import { AuthenticatedRequest, FirebaseDecodedToken } from '../types/firebase';
+
 
 /**
  * Middleware to authenticate Firebase token from Authorization header.

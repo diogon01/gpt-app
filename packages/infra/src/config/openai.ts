@@ -1,5 +1,5 @@
-import { OpenAI } from 'openai';
-import { env } from './env';
+import OpenAI from "openai";
+import { env } from "./env";
 
 /* Validate mandatory env vars */
 const missing: string[] = [];

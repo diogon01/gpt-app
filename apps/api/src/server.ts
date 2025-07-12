@@ -10,8 +10,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
-import { env } from './config/env';
-import { getMongoClient } from './config/mongo';
+import { env } from '@42robotics/infra/src/config/env';
+import { getMongoClient } from '@42robotics/infra/src/config/mongoClient';
 import routes from './routes';
 import { firebaseAuth } from '@42robotics/infra';
 

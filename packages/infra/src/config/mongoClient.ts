@@ -1,6 +1,5 @@
-// apps/api/src/config/mongo.ts
-import { MongoClient, Db } from 'mongodb';
-import { env } from './env';
+import { Db, MongoClient } from 'mongodb';
+import { env } from '../config/env';
 
 const missing: string[] = [];
 if (!env.mongoUser) missing.push('MONGO_USER');
@@ -22,16 +21,17 @@ const uri = (() => {
 
 let db: Db | null = null;
 
-/** Returns a cached Mongo DB instance */
+/**
+ * Returns a cached Mongo DB instance
+ */
 export async function getMongoClient(): Promise<Db> {
     if (!db) {
         const client = new MongoClient(uri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            tls: true,
-        } as any);
+            tls: true, // ✅ preferido para Cosmos DB
+        });
+
         await client.connect();
-        db = client.db(env.mongoDatabase); // ✅ conecta diretamente ao banco correto
+        db = client.db(env.mongoDatabase);
         console.log(`🗄️ MongoDB connected to "${env.mongoDatabase}"`);
     }
     return db;

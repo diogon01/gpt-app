@@ -1,4 +1,4 @@
-import { getMongoClient } from '../config/mongo';
+import { getMongoClient } from '@42robotics/infra/src/database/config/mongoClient';
 import { ServiceName, UserRepository } from '@42robotics/domain';
 import { CreateUserDTO } from '@42robotics/domain';
 import { MongoUser } from '@42robotics/domain';

@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { openai } from '../config/openai';
+import { openai } from '@42robotics/infra/src/config/openai';
 import { PromptResult } from '../models/PromptResult';
 import { generateChatCompletion } from '../services/openai.service';
 
