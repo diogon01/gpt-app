@@ -1,7 +1,7 @@
 // packages/domain/src/repositories/UserRepository.ts
 
-import { CreateUserDTO } from '../dtos/CreateUserDTO';
-import { MongoUser } from '../entities/MongoUser';
+import { CreateUserDTO } from "../dtos/create-user.dto";
+import { MongoUser } from "../entities/mongo-user";
 
 /**
  * Contract for user persistence operations.

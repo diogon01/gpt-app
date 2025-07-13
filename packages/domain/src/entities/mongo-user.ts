@@ -1,11 +1,12 @@
 // packages/domain/src/entities/MongoUser.ts
 
-import { AuthProvider } from '../enums/AuthProvider';
-import { SubscriptionPlan } from '../enums/SubscriptionPlan';
-import { SubscriptionStatus } from '../enums/SubscriptionStatus';
-import { SubscriptionEvent } from '../enums/SubscriptionEvent';
-import { ServiceName } from '../enums/ServiceName';
-import { AuthTokens } from './AuthTokens';
+import { AuthProvider } from "../enums/auth-provider";
+import { ServiceName } from "../enums/service-name";
+import { SubscriptionEvent } from "../enums/subscription-event";
+import { SubscriptionPlan } from "../enums/subscription-plan";
+import { SubscriptionStatus } from "../enums/subscription-status";
+import { AuthTokens } from "./auth-tokens";
+
 
 /**
  * MongoDB user document structure used internally.

@@ -1,6 +1,5 @@
-import { AuthTokens } from "./AuthTokens";
+import { AuthTokens } from "./auth-tokens";
 
-// packages/domain/src/entities/User.ts
 export interface UserProps {
     uid: string;
     federatedId: string;
@@ -23,7 +22,6 @@ export interface UserProps {
 export class User {
     constructor(private props: UserProps) { }
 
-    /*  ----------  Getters  ----------  */
     get uid() { return this.props.uid; }
     get email() { return this.props.email; }
     get displayName() { return this.props.displayName; }
@@ -31,7 +29,6 @@ export class User {
     get isPlus() { return this.props.isPlus; }
     get provider() { return this.props.provider; }
 
-    /*  ----------  Domain actions  ----------  */
     upgradeToPlus() {
         this.props.isPlus = true;
         this.touch();
@@ -46,5 +43,7 @@ export class User {
         this.props.updatedAt = new Date();
     }
 
-    toJSON() { return { ...this.props }; }
+    toJSON() {
+        return { ...this.props };
+    }
 }

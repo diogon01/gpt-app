@@ -1,4 +1,4 @@
-import { UserMessage } from '../interfaces/user-message.interface';
+import { UserMessage } from './user-message.interface';
 
 export interface UserHistoryEntry {
   timestamp: Date;
