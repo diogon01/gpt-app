@@ -25,8 +25,8 @@ export * from './services/AuthService';
 // ─────────────────────────────────────────────────────────────
 // Enums representing supported providers, services and plans
 // ─────────────────────────────────────────────────────────────
-export * from './enums/AuthProvider';
-export * from './enums/SubscriptionPlan';
-export * from './enums/SubscriptionStatus';
-export * from './enums/ServiceName';
-export * from './enums/SubscriptionEvent'
+export * from './enums/auth-provider';
+export * from './enums/subscription-plan';
+export * from './enums/subscription-status';
+export * from './enums/service-name';
+export * from './enums/subscription-event';

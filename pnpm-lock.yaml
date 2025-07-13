@@ -167,6 +167,9 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
     devDependencies:
+      '@42robotics/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@types/dotenv':
         specifier: ^8.2.3
         version: 8.2.3
@@ -176,6 +179,9 @@ importers:
       '@types/mongoose':
         specifier: ^5.11.97
         version: 5.11.97
+      '@types/node':
+        specifier: ^20.19.4
+        version: 20.19.4
 
 packages:
 

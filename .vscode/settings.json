@@ -1,0 +1,27 @@
+{
+    // Usa o TypeScript do projeto em vez do VSCode embutido
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    // Ajuda o VSCode a usar os aliases definidos no tsconfig.base.json
+    "typescript.preferences.importModuleSpecifier": "non-relative",
+    // Habilita IntelliSense com caminhos absolutos no monorepo
+    "typescript.projectReferences.enabled": true,
+    // Melhora a resolução de tipos e paths em monorepos
+    "typescript.preferences.includePackageJsonAutoImports": "on",
+    // Recomendado para monorepos grandes
+    "search.exclude": {
+        "**/dist": true,
+        "**/node_modules": true
+    },
+    "files.exclude": {
+        "**/dist": true,
+        "**/.turbo": true
+    },
+    // Organiza automaticamente imports ao salvar
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    // Formatação padrão com indentação de 2 espaços (opcional)
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+}
