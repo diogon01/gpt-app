@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuth } from '../stores/auth';
+import { useAuth } from '../stores/useAuthStore';
 
 const auth  = useAuth();
 const emit  = defineEmits<{ close: [] }>();

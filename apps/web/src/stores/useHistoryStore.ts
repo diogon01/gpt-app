@@ -1,62 +1,54 @@
 import { defineStore } from 'pinia';
 
-/** Single chat or generation entry shown in the UI */
-export interface HistoryItem {
-    _id?: string;
-    prompt: string;
-    /** `chat` for GPT answers, `art` / `geo` for image / geo generations */
-    type: 'chat' | 'art' | 'geo';
-    response: {
-        text?: string;
-        imgUrl?: string;
-    };
-    tags: string[];
-    createdAt: string;
-    loading?: boolean; // ✅ new flag: true while waiting for response
+export type MessageRole = 'user' | 'assistant';
+
+export interface UserMessage {
+    role: MessageRole;
+    content: string;
+}
+
+export interface UserHistoryEntry {
+    timestamp: string; // ou Date
+    messages: UserMessage[];
 }
 
 export const useHistoryStore = defineStore('history', {
     state: () => ({
-        items: [] as HistoryItem[],
+        history: [] as UserHistoryEntry[],
         loading: false
     }),
 
     actions: {
-        /** Load full history from the backend (if the user is authenticated) */
+        /** Load user history from backend */
         async fetch() {
             this.loading = true;
             try {
                 const res = await fetch('/api/history');
-                this.items = await res.json();
+                if (!res.ok) throw new Error('Failed to fetch history');
+                this.history = await res.json();
             } finally {
                 this.loading = false;
             }
         },
 
-        /** Push a new message locally so the UI updates instantly */
-        addLocal(item: HistoryItem) {
-            this.items.unshift(item);
+        /** Append a local message to the latest conversation session */
+        addLocalMessage(message: UserMessage) {
+            if (this.history.length === 0) {
+                // Create first session if it doesn't exist
+                this.history.unshift({
+                    timestamp: new Date().toISOString(),
+                    messages: [message]
+                });
+            } else {
+                this.history[0].messages.push(message);
+            }
         },
 
-        /** Adds a pending message (with spinner) to the top of the chat */
-        addPending(prompt: string): HistoryItem {
-            const item: HistoryItem = {
-                prompt,
-                type: 'chat',
-                response: {},
-                tags: [],
-                createdAt: new Date().toISOString(),
-                loading: true
-            };
-            this.items.unshift(item);
-            return item;
-        },
-
-        /** Replaces a pending message with the final assistant response */
-        resolvePending(item: HistoryItem, response: { text?: string; imgUrl?: string }) {
-            Object.assign(item, {
-                response,
-                loading: false
+        /** Start a new session manually (optional) */
+        startNewSession(initialMessage?: UserMessage) {
+            this.history.unshift({
+                timestamp: new Date().toISOString(),
+                messages: initialMessage ? [initialMessage] : []
             });
         }
     }

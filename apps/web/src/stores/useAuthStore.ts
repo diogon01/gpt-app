@@ -1,22 +1,22 @@
-import { defineStore } from 'pinia';
-import type { User as FirebaseUser } from 'firebase/auth';
 import {
-    initializeApp,
     getApps,
+    initializeApp,
 } from 'firebase/app';
+import type { User as FirebaseUser } from 'firebase/auth';
 import {
     getAuth,
     GoogleAuthProvider,
     OAuthProvider,
+    onAuthStateChanged,
     signInWithPopup,
     signOut,
-    onAuthStateChanged,
 } from 'firebase/auth';
 import {
-    getFirestore,
     doc,
     getDoc,
+    getFirestore,
 } from 'firebase/firestore';
+import { defineStore } from 'pinia';
 
 /* -------------------------------------------------------------------------- */
 /* 1. Firebase initialization using Vite environment variables                */
@@ -50,9 +50,13 @@ export interface MyUser {
 export const useAuth = defineStore('auth', {
     state: () => ({
         user: null as MyUser | null,
-        firebaseUser: null as FirebaseUser | null, // ✅ armazenar FirebaseUser
+        firebaseUser: null as FirebaseUser | null,
         loading: true,
     }),
+
+    getters: {
+        isLoggedIn: (state) => !!state.user,
+    },
 
     actions: {
         /**
@@ -76,7 +80,7 @@ export const useAuth = defineStore('auth', {
          */
         async loginGoogle() {
             const cred = await signInWithPopup(auth, new GoogleAuthProvider());
-            this.firebaseUser = cred.user; // ✅ salva o firebaseUser
+            this.firebaseUser = cred.user;
             this.user = await this.mapUser(cred.user, 'google');
         },
 
@@ -86,7 +90,7 @@ export const useAuth = defineStore('auth', {
         async loginMicrosoft() {
             const provider = new OAuthProvider('microsoft.com');
             const cred = await signInWithPopup(auth, provider);
-            this.firebaseUser = cred.user; // ✅ salva o firebaseUser
+            this.firebaseUser = cred.user;
             this.user = await this.mapUser(cred.user, 'microsoft');
         },
 
@@ -116,7 +120,7 @@ export const useAuth = defineStore('auth', {
                     ? 'google'
                     : 'microsoft';
 
-                this.firebaseUser = fbUser; // ✅ persiste após refresh
+                this.firebaseUser = fbUser;
                 this.user = await this.mapUser(fbUser, providerId as MyUser['provider']);
             });
         },

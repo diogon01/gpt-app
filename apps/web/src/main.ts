@@ -1,10 +1,10 @@
 // apps/web/src/main.ts
-import { createApp } from 'vue';
 import { createPinia } from 'pinia';
+import { createApp } from 'vue';
 
-import router from './router';
-import './index.css';
 import App from './App.vue';
+import './index.css';
+import router from './router';
 
 
 /* -------------------------------------------------------------------------- */
@@ -12,7 +12,7 @@ import App from './App.vue';
 /* -------------------------------------------------------------------------- */
 // Ajuste o caminho conforme o nome real do arquivo
 // se for auth.ts → '@/stores/auth'
-import { useAuth } from './stores/auth';
+import { useAuth } from './stores/useAuthStore';
 /* -------------------------------------------------------------------------- */
 /* Bootstrap                                                                  */
 /* -------------------------------------------------------------------------- */
