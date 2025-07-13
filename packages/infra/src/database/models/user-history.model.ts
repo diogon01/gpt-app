@@ -1,15 +1,15 @@
+// packages/infra/src/database/models/user-history.model.ts
 import { MessageRole } from '@42robotics/domain/enums/message-role.enum';
-import { Message } from '@42robotics/domain/interfaces/message.interface';
 import { UserHistory } from '@42robotics/domain/interfaces/user-history.interface';
+import { UserMessage } from '@42robotics/domain/interfaces/user-message.interface';
 import { Document, Schema, model } from 'mongoose';
-
 
 /**
  * Extension of the domain interface to support Mongoose-specific behavior.
  */
 interface IUserHistoryDocument extends UserHistory, Document { }
 
-const MessageSchema = new Schema<Message>(
+const MessageSchema = new Schema<UserMessage>(
     {
         role: {
             type: String,
@@ -33,8 +33,11 @@ const UserHistorySchema = new Schema<IUserHistoryDocument>(
     },
     {
         timestamps: true,
-        collection: 'user_histories',
+        collection: '42r_user_histories_prod',
     }
 );
 
-export const UserHistoryModel = model<IUserHistoryDocument>('UserHistory', UserHistorySchema);
+export const UserHistoryModel = model<IUserHistoryDocument>(
+    'UserHistory',
+    UserHistorySchema
+);

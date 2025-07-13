@@ -1,12 +1,27 @@
-// .vscode/launch.json
 {
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug API (ts-node)",
+            // 🐞 Anexa ao processo rodando com ts-node-dev --inspect
+            "name": "Attach to API (ts-node-dev)",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "restart": true,
+            "timeout": 10000,
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/apps/api/.env"
+        },
+        {
+            // 🚀 Inicia a API com ts-node direto no modo debug (launch)
+            "name": "Launch API (ts-node debug)",
             "type": "node",
             "request": "launch",
             "runtimeArgs": [
+                "--inspect",
                 "-r",
                 "ts-node/register/transpile-only",
                 "-r",
@@ -16,11 +31,11 @@
                 "${workspaceFolder}/apps/api/src/server.ts"
             ],
             "cwd": "${workspaceFolder}",
-            // 🔽 aponte para o arquivo que você criou
             "envFile": "${workspaceFolder}/apps/api/.env",
             "env": {
                 "TS_NODE_PROJECT": "${workspaceFolder}/apps/api/tsconfig.json"
             },
+            "console": "integratedTerminal",
             "skipFiles": [
                 "<node_internals>/**"
             ]
