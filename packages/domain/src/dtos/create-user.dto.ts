@@ -1,6 +1,6 @@
 // packages/domain/src/dtos/CreateUserDTO.ts
 
-import { AuthTokens } from "../entities/AuthTokens";
+import { AuthTokens } from "../entities/auth-tokens";
 import { AuthProvider } from "../enums/auth-provider";
 import { ServiceName } from "../enums/service-name";
 import { SubscriptionEvent } from "../enums/subscription-event";

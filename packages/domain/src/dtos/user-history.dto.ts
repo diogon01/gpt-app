@@ -1,11 +1,11 @@
-import { UserMessage } from './user-message.interface';
+import { UserHistoryEntry } from "./user-history-entry.dto";
 
-export interface UserHistoryEntry {
-  timestamp: Date;
-  messages: UserMessage[];
-}
 
-export interface CreateUserHistoryDTO {
+
+/**
+ * Represents a single session in the user's conversation history.
+ */
+export interface UserHistoryDTO {
   firebaseUid: string;
   history: UserHistoryEntry[];
 }

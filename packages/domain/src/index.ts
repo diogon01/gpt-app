@@ -9,6 +9,7 @@ export * from './entities/user';
 // Data Transfer Objects used for input/output validation
 // ─────────────────────────────────────────────────────────────
 export * from './dtos/create-user.dto';
+export * from './dtos/user-history-entry.dto';
 export * from './dtos/user-history.dto';
 export * from './dtos/verify-assertion.dto';
 
