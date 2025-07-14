@@ -1,50 +1,52 @@
+// apps/web/src/stores/useHistoryStore.ts
+
+import type { UserHistoryEntry, UserMessage } from '@42robotics/domain';
 import { defineStore } from 'pinia';
 import { useAuth } from './useAuthStore';
-
-export type MessageRole = 'user' | 'assistant';
-
-export interface UserMessage {
-    role: MessageRole;
-    content: string;
-}
-
-export interface UserHistoryEntry {
-    timestamp: string;
-    messages: UserMessage[];
-}
 
 export const useHistoryStore = defineStore('history', {
     state: () => ({
         history: [] as UserHistoryEntry[],
         loading: false,
+        activeSession: null as UserHistoryEntry | null,
     }),
 
+    getters: {
+        /** Returns summary list for the sidebar */
+        summaryItems(state): { prompt: string; createdAt: string }[] {
+            return state.history.map(entry => {
+                const userMsg = entry.messages.find(m => m.role === 'user');
+                return {
+                    prompt: userMsg?.content ?? '(no prompt)',
+                    createdAt: entry.timestamp,
+                };
+            });
+        },
+    },
+
     actions: {
-        /** Load user history from backend with authentication token */
+        /** Fetch all sessions from backend and populate history */
         async fetch() {
             this.loading = true;
             try {
                 const authStore = useAuth();
+                if (!authStore.firebaseUser) throw new Error('User is not authenticated');
 
-                // Ensure user is authenticated
-                if (!authStore.firebaseUser) {
-                    throw new Error('User is not authenticated');
-                }
-
-                // Retrieve Firebase auth token
                 const token = await authStore.firebaseUser.getIdToken();
-
-                // Send request with Authorization header
                 const res = await fetch('/api/history', {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
                 });
 
                 if (!res.ok) throw new Error('Failed to fetch history');
 
-                this.history = await res.json();
+                const data = await res.json();
+
+                // Safely assign history from backend
+                this.history = Array.isArray(data.history) ? data.history : [];
+                this.activeSession = this.history[0] ?? null;
             } catch (error) {
                 console.error('Error loading user history:', error);
             } finally {
@@ -52,25 +54,33 @@ export const useHistoryStore = defineStore('history', {
             }
         },
 
-        /** Append a local message to the latest conversation session */
-        addLocalMessage(message: UserMessage) {
-            if (this.history.length === 0) {
-                // Create first session if it doesn't exist
-                this.history.unshift({
+        /** Set which session is currently active (e.g., selected from sidebar) */
+        setActiveSessionByTimestamp(timestamp: string) {
+            this.activeSession = this.history.find(h => h.timestamp === timestamp) || null;
+        },
+
+        /** Add a new message to the active session, or create a new one if needed */
+        appendMessage(message: UserMessage) {
+            if (!this.activeSession) {
+                const newSession: UserHistoryEntry = {
                     timestamp: new Date().toISOString(),
-                    messages: [message]
-                });
+                    messages: [message],
+                };
+                this.history.unshift(newSession);
+                this.activeSession = newSession;
             } else {
-                this.history[0].messages.push(message);
+                this.activeSession.messages.push(message);
             }
         },
 
-        /** Start a new session manually (optional) */
+        /** Manually start a new session */
         startNewSession(initialMessage?: UserMessage) {
-            this.history.unshift({
+            const newSession: UserHistoryEntry = {
                 timestamp: new Date().toISOString(),
-                messages: initialMessage ? [initialMessage] : []
-            });
-        }
-    }
+                messages: initialMessage ? [initialMessage] : [],
+            };
+            this.history.unshift(newSession);
+            this.activeSession = newSession;
+        },
+    },
 });

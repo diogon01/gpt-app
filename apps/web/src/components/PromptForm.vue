@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useAuth } from '../stores/useAuthStore';
 import { useUiStore } from '../stores/useUiStore';
 
 const emit = defineEmits<{
@@ -7,6 +8,7 @@ const emit = defineEmits<{
 }>();
 
 const ui = useUiStore();
+const auth = useAuth();
 const prompt = ref('');
 const loading = ref(false);
 
@@ -15,10 +17,20 @@ async function submit() {
   loading.value = true;
 
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Adiciona Authorization se estiver logado
+    const token = await auth.firebaseUser?.getIdToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch('/api/ia', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt.value, model: ui.model })
+      headers,
+      body: JSON.stringify({ prompt: prompt.value, model: ui.model }),
     });
 
     const data = await res.json();
@@ -36,6 +48,7 @@ async function submit() {
   }
 }
 </script>
+
 
 <template>
   <form @submit.prevent="submit"

@@ -6,6 +6,12 @@ export class HistoryService {
     const db = await getMongoClient();
     const collection = db.collection('42r_prompt_results_prod');
 
+    // ✅ Cria índice se ainda não existir (evita erro de ordenação no CosmosDB)
+    await collection.createIndex(
+      { userId: 1, createdAt: -1 },
+      { background: true, name: 'userId_createdAt_idx' }
+    );
+
     const results = await collection
       .find({ userId: firebaseUid })
       .sort({ createdAt: -1 })
