@@ -11,17 +11,20 @@ This project is a fullstack web application developed as part of a technical cha
 - [Pinia](https://pinia.vuejs.org/) — state management
 - [Vue Router](https://router.vuejs.org/) — public and private routes
 - [Tailwind CSS](https://tailwindcss.com/) — utility-first styling
-- [Firebase](https://firebase.google.com/) — optional authentication
+- [Firebase Authentication](https://firebase.google.com/) — with **Google** and **Microsoft OAuth2 login**
+- Dynamic user role mapping via Firestore
 
 ### Backend (`apps/api`)
 - [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/)
 - [MongoDB](https://www.mongodb.com/) with [Mongoose](https://mongoosejs.com/)
-- [OpenAI API](https://platform.openai.com/)
-- Middleware, CORS, Helmet, Rate Limiting
+- [OpenAI API](https://platform.openai.com/) — GPT integration
+- Firebase Admin for token verification (via Bearer token middleware)
+- Middleware stack with `Helmet`, `CORS`, `express-rate-limit`, and global error handling
 
 ### Shared Packages
-- `@42robotics/domain`: DTOs, entities, mappers, interfaces
-- `@42robotics/infra`: shared configuration, authentication strategies, database setup, type definitions
+- `@42robotics/domain`: Shared data contracts — DTOs, entities, mappers, interfaces
+- `@42robotics/infra`: Firebase admin setup, environment config, MongoDB connection, and typed utilities
+
 
 ---
 

@@ -4,10 +4,11 @@ dist/
 build/
 .cache/
 
-# Environment Variables
+# Environment files
 .env
-.env.* 
-*.env
+!.env.example
+!*/.env.example
+.env.*
 
 # Firebase and Cloud Keys
 apps/api/src/config/firebase/*.json
