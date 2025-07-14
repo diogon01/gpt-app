@@ -1,13 +1,18 @@
-import { RequestHandler } from 'express';
+import { IARequestDTO } from '@42robotics/domain/src/dtos/ia-request.dto';
+import { IAResponseDTO } from '@42robotics/domain/src/dtos/ia-response.dto';
+import { mapIAResponse } from '@42robotics/domain/src/mappers/ia-response.mapper';
 import { openai } from '@42robotics/infra/src/config/openai';
-import { PromptResult } from '@42robotics/infra/src/database/models/prompt-result.model';
+import { RequestHandler } from 'express';
+import { HistoryService } from '../services/history.service';
 import { generateChatCompletion } from '../services/openai.service';
 
 export const handleIA: RequestHandler = async (req, res, next) => {
-    const { prompt, model } = req.body;
+    const { prompt, model } = req.body as IARequestDTO;
 
-    // ─────── basic validation ───────
+    console.log('📥 [handleIA] Incoming request received');
+
     if (!prompt || !model) {
+        console.warn('⚠️ [handleIA] Missing prompt or model');
         res.status(400).json({ error: 'Required parameters: prompt and model' });
         return;
     }
@@ -15,29 +20,40 @@ export const handleIA: RequestHandler = async (req, res, next) => {
     try {
         let result: any;
 
-        // ─────── Decide between chat or image generation ───────
+        console.log(`🧠 [handleIA] Processing model: ${model}`);
+
         if (model === 'GeoAI' || model.toLowerCase().includes('gpt')) {
+            console.log('💬 [handleIA] Generating chat completion...');
             result = await generateChatCompletion(prompt, model);
+            console.log('✅ [handleIA] Chat completion generated');
         } else {
+            console.log('🖼️ [handleIA] Generating image...');
             result = await openai.images.generate({
                 model,
                 prompt,
-                size: '1024x1024'
+                size: '1024x1024',
             });
+            console.log('✅ [handleIA] Image generated');
+            res.json(result);
+            return;
         }
 
-        // ─────── Save to history if authenticated ───────
         if (req.user) {
-            await PromptResult.create({
+            console.log(`💾 [handleIA] Saving result to history for user: ${req.user.id}`);
+            await HistoryService.savePromptResult({
                 userId: req.user.id,
                 prompt,
                 type: model,
-                response: result
+                response: result,
             });
         }
 
-        res.json(result);
+        const response: IAResponseDTO = mapIAResponse(result);
+
+        console.log('📤 [handleIA] Sending response to client');
+        res.json(response);
     } catch (err) {
+        console.error('❌ [handleIA] Error while processing request:', err);
         next(err);
     }
 };

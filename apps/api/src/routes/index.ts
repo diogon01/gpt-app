@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
-import { handleIA } from '../controllers/ia.controller';
+import { Request, Response, Router } from 'express';
 import { handleAuthSync } from '../controllers/auth.controller';
+import { getUserHistory } from '../controllers/history.controller';
+import { handleIA } from '../controllers/ia.controller';
 
 const router = Router();
 
@@ -10,6 +11,9 @@ router.get('/health', (_req: Request, res: Response) => {
 
 router.post('/ia', handleIA);
 
+router.get('/history', getUserHistory);
+
 
 router.post('/auth/sync', handleAuthSync);
 export default router;
+

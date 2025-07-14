@@ -1,44 +1,31 @@
-import { MessageRole, UserHistoryDTO } from '@42robotics/domain';
-import { UserHistoryEntry } from '@42robotics/domain/src/dtos/user-history-entry.dto';
-import { PromptResult } from '@42robotics/infra/src/database/models/prompt-result.model';
+import { UserHistoryDTO } from '@42robotics/domain';
 import { RequestHandler } from 'express';
+import { HistoryService } from '../services/history.service';
 
 export const getUserHistory: RequestHandler = async (req, res, next) => {
   try {
+    console.log('📥 [getUserHistory] Incoming request');
+
     if (!req.user?.id) {
+      console.warn('⚠️ [getUserHistory] Unauthorized access attempt');
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const results = await PromptResult.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    console.log(`🔐 [getUserHistory] Authenticated user: ${req.user.id}`);
 
-    const history: UserHistoryEntry[] = results.map((entry) => ({
-      timestamp: entry.createdAt,
-      messages: [
-        {
-          role: MessageRole.User,
-          content: entry.prompt ?? '',
-          timestamp: entry.createdAt
-        },
-        {
-          role: MessageRole.Assistant,
-          content:
-            typeof entry.response === 'string'
-              ? entry.response
-              : JSON.stringify(entry.response),
-          timestamp: entry.createdAt
-        }
-      ]
-    }));
-
+    const history = await HistoryService.getUserHistory(req.user.id);
+    console.log(`📦 [getUserHistory] Found ${history.length} history entries`);
 
     const response: UserHistoryDTO = {
       firebaseUid: req.user.id,
       history,
     };
 
+    console.log('✅ [getUserHistory] Sending response');
     res.status(200).json(response);
   } catch (error) {
+    console.error('❌ [getUserHistory] Error:', error);
     next(error);
   }
 };

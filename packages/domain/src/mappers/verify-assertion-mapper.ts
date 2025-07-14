@@ -1,7 +1,8 @@
 // packages/domain/src/mappers/verifyAssertionMapper.ts
-import { VerifyAssertionDTO } from '../dtos/VerifyAssertionDTO';
-import { AuthTokens } from '../entities/AuthTokens';
-import { UserProps } from '../entities/User';
+
+import { VerifyAssertionDTO } from "../dtos/verify-assertion.dto";
+import { AuthTokens } from "../entities/auth-tokens";
+import { UserProps } from "../entities/user";
 
 export function mapVerifyAssertion(
     r: VerifyAssertionDTO
