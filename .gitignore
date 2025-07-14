@@ -36,3 +36,5 @@ nyc_output/
 *.bak
 *.swp
 *.tmp
+
+packages/infra/src/config/agro42-service-account.json

@@ -1,7 +1,7 @@
 <!-- apps/web/src/components/Sidebar.vue -->
 <script setup lang="ts">
-import { useAuth } from '../stores/useAuthStore';
-import { useHistoryStore } from '../stores/useHistoryStore';
+import { useAuth } from '../../stores/useAuthStore';
+import { useHistoryStore } from '../../stores/useHistoryStore';
 
 defineProps<{ open: boolean }>();
 const emit = defineEmits<{ close: [] }>();

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useAuth } from '../stores/useAuthStore';
-import { useUiStore } from '../stores/useUiStore';
-import LoginModal from './LoginModal.vue';
+import { useAuth } from '../../stores/useAuthStore';
+import { useUiStore } from '../../stores/useUiStore';
+
 
 defineEmits<{ menu: [] }>();
 

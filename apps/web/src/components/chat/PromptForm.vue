@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAuth } from '../stores/useAuthStore';
-import { useUiStore } from '../stores/useUiStore';
+import { useAuth } from '../../stores/useAuthStore';
+import { useUiStore } from '../../stores/useUiStore';
+
 
 const emit = defineEmits<{
   'new-message': [{ prompt: string; response: { text?: string; imgUrl?: string } }];
