@@ -1,8 +1,10 @@
 // apps/web/src/stores/useHistoryStore.ts
-
-import type { UserHistoryEntry, UserMessage } from '@42robotics/domain';
+import type { UserHistory, UserMessage } from '@42robotics/domain';
 import { defineStore } from 'pinia';
 import { useAuth } from './useAuthStore';
+
+/** A single chat session inside UserHistory */
+type UserHistoryEntry = UserHistory['history'][number];
 
 export const useHistoryStore = defineStore('history', {
     state: () => ({
@@ -12,25 +14,25 @@ export const useHistoryStore = defineStore('history', {
     }),
 
     getters: {
-        /** Returns summary list for the sidebar */
+        /** List used in the sidebar */
         summaryItems(state): { prompt: string; createdAt: string }[] {
             return state.history.map(entry => {
                 const userMsg = entry.messages.find(m => m.role === 'user');
                 return {
                     prompt: userMsg?.content ?? '(no prompt)',
-                    createdAt: entry.timestamp,
+                    createdAt: entry.timestamp.toISOString(),
                 };
             });
         },
     },
 
     actions: {
-        /** Fetch all sessions from backend and populate history */
+        /** Load all sessions from backend */
         async fetch() {
             this.loading = true;
             try {
                 const authStore = useAuth();
-                if (!authStore.firebaseUser) throw new Error('User is not authenticated');
+                if (!authStore.firebaseUser) throw new Error('User not authenticated');
 
                 const token = await authStore.firebaseUser.getIdToken();
                 const res = await fetch('/api/history', {
@@ -42,42 +44,53 @@ export const useHistoryStore = defineStore('history', {
 
                 if (!res.ok) throw new Error('Failed to fetch history');
 
-                const data = await res.json();
+                const data: UserHistory = await res.json();
 
-                // Safely assign history from backend
-                this.history = Array.isArray(data.history) ? data.history : [];
+                // Convert plain JSON dates → Date objects
+                this.history = data.history.map(h => ({
+                    timestamp: new Date(h.timestamp),
+                    messages: h.messages.map(m => ({ ...m, timestamp: new Date(m.timestamp) })),
+                }));
+
                 this.activeSession = this.history[0] ?? null;
-            } catch (error) {
-                console.error('Error loading user history:', error);
+            } catch (err) {
+                console.error('Error loading user history:', err);
             } finally {
                 this.loading = false;
             }
         },
 
-        /** Set which session is currently active (e.g., selected from sidebar) */
-        setActiveSessionByTimestamp(timestamp: string) {
-            this.activeSession = this.history.find(h => h.timestamp === timestamp) || null;
+        /** Select a session using its ISO string timestamp */
+        setActiveSessionByTimestamp(tsIso: string) {
+            this.activeSession =
+                this.history.find(h => h.timestamp.toISOString() === tsIso) ?? null;
         },
 
-        /** Add a new message to the active session, or create a new one if needed */
-        appendMessage(message: UserMessage) {
+        /**
+         * Append a message to the active session or create a new one.
+         * Timestamp is injected automatically.
+         */
+        appendMessage(message: Omit<UserMessage, 'timestamp'>) {
+            const msg: UserMessage = { ...message, timestamp: new Date() };
+
             if (!this.activeSession) {
                 const newSession: UserHistoryEntry = {
-                    timestamp: new Date().toISOString(),
-                    messages: [message],
+                    timestamp: msg.timestamp,
+                    messages: [msg],
                 };
                 this.history.unshift(newSession);
                 this.activeSession = newSession;
             } else {
-                this.activeSession.messages.push(message);
+                this.activeSession.messages.push(msg);
             }
         },
 
-        /** Manually start a new session */
-        startNewSession(initialMessage?: UserMessage) {
+        /** Start a brand-new chat session */
+        startNewSession(initial?: Omit<UserMessage, 'timestamp'>) {
+            const now = new Date();
             const newSession: UserHistoryEntry = {
-                timestamp: new Date().toISOString(),
-                messages: initialMessage ? [initialMessage] : [],
+                timestamp: now,
+                messages: initial ? [{ ...initial, timestamp: now }] : [],
             };
             this.history.unshift(newSession);
             this.activeSession = newSession;

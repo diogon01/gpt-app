@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { UserMessage } from '@42robotics/domain';
+import type { UserMessage } from '@42robotics/domain';
 import MessageBubble from './MessageBubble.vue';
 
-const props = defineProps<{
-  items: UserMessage[];
-}>();
+const { items } = defineProps<{ items: UserMessage[] }>();
 </script>
 
 <template>
