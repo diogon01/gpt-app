@@ -4,6 +4,7 @@ import { Router } from 'express';
 import {
   deleteHistorySession,
   getUserHistory,
+  getUserHistorySessionById,
   renameHistorySession,
   searchUserHistory,
 } from '../controllers/history.controller';
@@ -23,6 +24,13 @@ router.get('/', getUserHistory);
  * @access Private
  */
 router.get('/search', searchUserHistory);
+
+/**
+ * @route GET /history/:sessionId
+ * @desc Returns a specific session for the authenticated user
+ * @access Private
+ */
+router.get('/:sessionId', getUserHistorySessionById);
 
 /**
  * @route PATCH /history/:sessionId

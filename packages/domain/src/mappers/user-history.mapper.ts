@@ -8,15 +8,15 @@ import { UserMessageEntity } from '../entities/user-message.entity';
 /**
  * Maps a full UserHistoryEntity from the database into a transport-safe DTO (UserHistoryResponseDTO).
  *
- * @param {UserHistoryEntity} userHistory - The user's complete history retrieved from the persistence layer.
- * @returns {UserHistoryResponseDTO} - A sanitized and serialized DTO representing the user's history.
+ * @param userHistory - The user's complete history retrieved from the persistence layer.
+ * @returns A sanitized and serialized DTO representing the user's history.
  */
 export function mapUserHistoryToDTO(userHistory: UserHistoryEntity): UserHistoryResponseDTO {
   return {
     firebaseUid: userHistory.userId,
     sessions: userHistory.sessions.map(entry =>
-      mapEntryToDTO({
-        _id: entry._id.toString(), // ensure _id is stringified
+      mapHistoryEntryToDTO({
+        _id: entry._id.toString(),
         timestamp: entry.timestamp,
         messages: entry.messages,
       })
@@ -25,15 +25,12 @@ export function mapUserHistoryToDTO(userHistory: UserHistoryEntity): UserHistory
 }
 
 /**
- * Converts a single session entry into a format suitable for transport.
+ * Maps a single session entry into a transport-safe DTO (UserHistoryEntryResponseDTO).
  *
- * @param {Object} entry - A session entry containing its unique identifier, timestamp, and related messages.
- * @param {string} entry._id - The MongoDB ObjectId of the session, stringified.
- * @param {Date} entry.timestamp - The timestamp of when the session started.
- * @param {UserMessageEntity[]} entry.messages - List of messages exchanged during the session.
- * @returns {UserHistoryEntryResponseDTO} - A fully mapped DTO session with normalized message contents.
+ * @param entry - A session entry containing its unique identifier, timestamp, and message list.
+ * @returns A fully mapped DTO session with normalized message contents.
  */
-function mapEntryToDTO(entry: {
+export function mapHistoryEntryToDTO(entry: {
   _id: string;
   timestamp: Date;
   messages: UserMessageEntity[];

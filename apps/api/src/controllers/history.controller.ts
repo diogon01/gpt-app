@@ -39,6 +39,37 @@ export const getUserHistory: RequestHandler = async (req, res, next) => {
 };
 
 /**
+ * Retrieves a specific history session by ID for the authenticated user.
+ *
+ * @route GET /history/:sessionId
+ * @access Private
+ * @param req - Express request object containing sessionId and authenticated user
+ * @param res - Express response object used to return the session data
+ * @param next - Express next middleware function for error handling
+ * @returns Sends a 200 response with the session data or appropriate error
+ */
+export const getUserHistorySessionById: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { sessionId } = req.params;
+
+    const session = await HistoryService.getSessionById(req.user.id, sessionId);
+
+    res.status(200).json(session);
+  } catch (error) {
+    if ((error as Error).message === 'SESSION_NOT_FOUND') {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+    next(error);
+  }
+};
+
+/**
  * Updates the title of a specific history session by session ID.
  *
  * @route PATCH /history/:sessionId

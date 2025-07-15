@@ -1,5 +1,10 @@
-import { MessageRole, UserHistoryEntryEntity } from '@42robotics/domain';
+import {
+  mapHistoryEntryToDTO,
+  MessageRole,
+  UserHistoryEntryEntity,
+} from '@42robotics/domain';
 import { HistoryRenameRequestDTO } from '@42robotics/domain/src/dtos/request/history-rename-request.dto';
+import { UserHistoryEntryResponseDTO } from '@42robotics/domain/src/dtos/response/user-history-entry-response.dto';
 import { getMongoClient } from '@42robotics/infra/src/config/mongoClient';
 import { ObjectId } from 'mongodb';
 
@@ -7,16 +12,15 @@ const COLLECTION_NAME = '42r_prompt_results_prod';
 
 export class HistoryService {
   /**
-   * Retrieves the user's history sessions sorted by creation date
-   * 
-   * @param firebaseUid - User UID provided by Firebase authentication
-   * @returns Array of mapped user history sessions
+   * Retrieves the authenticated user's history sessions sorted by creation date.
+   *
+   * @param firebaseUid - Unique identifier from Firebase authentication
+   * @returns A list of mapped user history session entities
    */
   static async getUserHistory(firebaseUid: string): Promise<UserHistoryEntryEntity[]> {
     const db = await getMongoClient();
     const collection = db.collection(COLLECTION_NAME);
 
-    // ✅ Ensure index exists to optimize query on CosmosDB/MongoDB
     await collection.createIndex(
       { userId: 1, createdAt: -1 },
       { background: true, name: 'userId_createdAt_idx' }
@@ -31,13 +35,44 @@ export class HistoryService {
   }
 
   /**
-   * Performs a case-insensitive search across prompt and response fields
+   * Retrieves a specific session by its unique ID and returns a serialized DTO.
    *
-   * @param userId - Firebase UID of the user
-   * @param query - Search term to match against prompt or response
-   * @returns Matching user history sessions
+   * @param userId - Unique Firebase UID of the user
+   * @param sessionId - MongoDB ObjectId of the session
+   * @returns {UserHistoryEntryResponseDTO} A single history session serialized as UserHistoryEntryResponseDTO
+   * @throws Error if the session does not exist or does not belong to the user
    */
-  static async searchSessions(userId: string, query: string): Promise<UserHistoryEntryEntity[]> {
+  static async getSessionById(
+    userId: string,
+    sessionId: string
+  ): Promise<UserHistoryEntryResponseDTO> {
+    const db = await getMongoClient();
+    const collection = db.collection(COLLECTION_NAME);
+
+    const entry = await collection.findOne({
+      userId,
+      _id: new ObjectId(sessionId),
+    });
+
+    if (!entry) {
+      throw new Error('SESSION_NOT_FOUND');
+    }
+
+    const sessionEntity = HistoryService.mapEntryToSession(entry);
+    return mapHistoryEntryToDTO(sessionEntity);
+  }
+
+  /**
+   * Performs a case-insensitive search across prompt and response fields.
+   *
+   * @param userId - Unique Firebase UID of the user
+   * @param query - Search keyword or phrase
+   * @returns A list of matching user history sessions
+   */
+  static async searchSessions(
+    userId: string,
+    query: string
+  ): Promise<UserHistoryEntryEntity[]> {
     const db = await getMongoClient();
     const collection = db.collection(COLLECTION_NAME);
 
@@ -56,12 +91,12 @@ export class HistoryService {
   }
 
   /**
-   * Saves a prompt and its response to the history collection
-   * 
-   * @param userId - User UID
-   * @param prompt - The question submitted by the user
-   * @param type - Model or use-case type identifier
-   * @param response - Raw assistant response
+   * Saves a user-submitted prompt and its corresponding response to the database.
+   *
+   * @param userId - Unique Firebase UID of the user
+   * @param prompt - The prompt submitted by the user
+   * @param type - Type or category of the prompt
+   * @param response - The assistant's response to the prompt
    */
   static async savePromptResult({
     userId,
@@ -87,13 +122,12 @@ export class HistoryService {
   }
 
   /**
-   * Renames a single prompt session belonging to the user
+   * Renames a session by updating its prompt/title.
    *
-   * @param userId - Firebase UID of the user
-   * @param sessionId - The session's MongoDB ObjectId as string (_id)
-   * @param data - New title passed in the request
-   * @returns The result of the update operation
-   * @throws Error if session is not found
+   * @param userId - Unique Firebase UID of the user
+   * @param sessionId - The session's MongoDB ObjectId
+   * @param data - The new title provided in the request
+   * @throws Error if no session was updated
    */
   static async renameSession(
     userId: string,
@@ -114,12 +148,11 @@ export class HistoryService {
   }
 
   /**
-   * Deletes a single prompt session belonging to the user
+   * Deletes a specific session belonging to the user.
    *
-   * @param userId - Firebase UID of the user
-   * @param sessionId - The session's MongoDB ObjectId as string (_id)
-   * @returns void
-   * @throws Error if session is not found
+   * @param userId - Unique Firebase UID of the user
+   * @param sessionId - The session's MongoDB ObjectId
+   * @throws Error if no session was deleted
    */
   static async deleteSession(
     userId: string,
@@ -139,10 +172,10 @@ export class HistoryService {
   }
 
   /**
-   * Maps a raw MongoDB entry into a UserHistoryEntryEntity
+   * Maps a raw MongoDB document into a domain-level UserHistoryEntryEntity.
    *
-   * @param entry - Raw MongoDB document
-   * @returns Mapped session entity
+   * @param entry - Raw MongoDB document from the history collection
+   * @returns A normalized UserHistoryEntryEntity
    */
   private static mapEntryToSession(entry: any): UserHistoryEntryEntity {
     return {
@@ -156,9 +189,10 @@ export class HistoryService {
         },
         {
           role: MessageRole.Assistant,
-          content: typeof entry.response === 'string'
-            ? entry.response
-            : JSON.stringify(entry.response),
+          content:
+            typeof entry.response === 'string'
+              ? entry.response
+              : JSON.stringify(entry.response),
           timestamp: entry.createdAt,
         },
       ],
