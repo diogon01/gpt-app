@@ -1,4 +1,3 @@
-// apps/web/src/stores/useHistoryStore.ts
 import { defineStore } from 'pinia';
 import { useAuth } from './useAuthStore';
 
@@ -85,17 +84,17 @@ export const useHistoryStore = defineStore('history', {
         /**
          * Renames a specific session by sending a PATCH request to the API.
          * Also updates the session title locally in the store.
-         * 
-         * @param sessionId - MongoDB ObjectId of the session to rename
+         *
+         * @param _id - MongoDB ObjectId of the session to rename
          * @param newTitle - New title to assign to the first user message
          */
-        async renameSession(sessionId: string, newTitle: string) {
+        async renameSession(_id: string, newTitle: string) {
             try {
                 const authStore = useAuth();
                 if (!authStore.firebaseUser) throw new Error('User not authenticated');
 
                 const token = await authStore.firebaseUser.getIdToken();
-                const res = await fetch(`/api/history/${encodeURIComponent(sessionId)}`, {
+                const res = await fetch(`/api/history/${encodeURIComponent(_id)}`, {
                     method: 'PATCH',
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -107,7 +106,7 @@ export const useHistoryStore = defineStore('history', {
                 if (!res.ok) throw new Error('Failed to rename session');
 
                 // Update local session title
-                const session = this.history.find((h) => h._id === sessionId);
+                const session = this.history.find((h) => h._id === _id);
                 if (session) {
                     const userMsg = session.messages.find((m) => m.role === 'user');
                     if (userMsg) userMsg.content = newTitle;
@@ -119,8 +118,8 @@ export const useHistoryStore = defineStore('history', {
 
         /**
          * Activates a session by matching the provided ISO timestamp.
-         * This is useful for selecting a session after initial fetch.
-         * 
+         * Useful for restoring selected session after initial fetch.
+         *
          * @param tsIso - ISO timestamp string
          */
         setActiveSessionByTimestamp(tsIso: string) {
@@ -131,7 +130,7 @@ export const useHistoryStore = defineStore('history', {
         /**
          * Appends a new message to the currently active session.
          * If no session is active, a new one is created.
-         * 
+         *
          * @param message - User or assistant message to append
          */
         appendMessage(message: Omit<UserMessageEntity, 'timestamp'>) {
@@ -156,7 +155,7 @@ export const useHistoryStore = defineStore('history', {
         /**
          * Starts a new session, optionally with an initial message.
          * Sets the newly created session as the active one.
-         * 
+         *
          * @param initial - Optional initial message to include in the session
          */
         startNewSession(initial?: Omit<UserMessageEntity, 'timestamp'>) {

@@ -8,7 +8,7 @@ import HistoryListItem from './HistoryListItem.vue';
  * @property {string} [activeTimestamp] - The active session timestamp
  */
 const props = defineProps<{
-  items: { prompt: string; createdAt: string }[];
+  items: { _id: string; prompt: string; createdAt: string }[];
   activeTimestamp?: string;
 }>();
 
@@ -21,17 +21,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   select: [timestamp: string];
   delete: [timestamp: string];
-  rename: [timestamp: string, newTitle: string];
+  rename: [_id: string, newTitle: string];
 }>();
-
-/**
- * Handles rename event from a list item
- * @param timestamp - Session timestamp (ISO string)
- * @param newTitle - New session title entered by the user
- */
-function handleRename(timestamp: string, newTitle: string) {
-  emit('rename', timestamp, newTitle);
-}
 </script>
 
 <template>
@@ -44,10 +35,11 @@ function handleRename(timestamp: string, newTitle: string) {
       :key="i.createdAt"
       :label="i.prompt"
       :timestamp="i.createdAt"
+      :_id="i._id"
       :active="props.activeTimestamp === i.createdAt"
       @select="emit('select', $event)"
       @delete="emit('delete', $event)"
-      @rename="(newTitle) => handleRename(i.createdAt, newTitle)"
+      @rename="(_id, newTitle) => emit('rename', _id, newTitle)"
     />
   </ul>
 </template>

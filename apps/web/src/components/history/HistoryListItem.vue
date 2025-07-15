@@ -3,18 +3,35 @@ import EditableLabel from '@/components/history/EditableLabel.vue';
 import Icon from '@/components/shared/Icon.vue';
 import { nextTick, ref } from 'vue';
 
+/**
+ * Props received by the HistoryListItem component.
+ * @property {string} label - The display text for the session.
+ * @property {string} timestamp - ISO timestamp of the session.
+ * @property {string} _id - Unique identifier for the session (from backend).
+ * @property {boolean} active - Flag indicating if this session is currently active.
+ * @property {boolean} [isPlus] - Optional flag for additional session actions.
+ */
 const props = defineProps<{
   label: string;
   timestamp: string;
-  sessionId: string;
+  _id: string;
   active: boolean;
   isPlus?: boolean;
 }>();
 
+/**
+ * Events emitted by the component.
+ * - select: Triggered when the list item is clicked.
+ * - delete: Triggered when the session is to be deleted.
+ * - rename: Triggered after renaming the session.
+ * - share: Triggered when the session is shared.
+ * - removeFromProject: Triggered when session is removed from project.
+ * - archive: Triggered when the session is archived.
+ */
 const emit = defineEmits<{
   select: [timestamp: string];
   delete: [timestamp: string];
-  rename: [sessionId: string, newTitle: string];
+  rename: [_id: string, newTitle: string];
   share: [timestamp: string];
   removeFromProject: [timestamp: string];
   archive: [timestamp: string];
@@ -23,9 +40,12 @@ const emit = defineEmits<{
 const menuOpen = ref(false);
 const menuX = ref(0);
 const menuY = ref(0);
-
 const labelRef = ref<InstanceType<typeof EditableLabel>>();
 
+/**
+ * Toggles the contextual menu and calculates its position relative to the clicked element.
+ * @param {MouseEvent} e - The mouse click event.
+ */
 function toggleMenu(e: MouseEvent) {
   e.stopPropagation();
   menuOpen.value = !menuOpen.value;
@@ -43,6 +63,9 @@ function toggleMenu(e: MouseEvent) {
   }
 }
 
+/**
+ * Triggers edit mode on the EditableLabel component.
+ */
 function triggerRename() {
   menuOpen.value = false;
   labelRef.value?.startEdit();
@@ -58,12 +81,13 @@ function triggerRename() {
     }"
     @click="emit('select', props.timestamp)"
   >
+    <!-- Editable label with session rename handler -->
     <EditableLabel
       ref="labelRef"
-      :sessionId="props.sessionId"
+      :_id="props._id"
       :text="props.label"
       :active="props.active"
-      @rename="emit('rename', $event[0], $event[1])"
+      @rename="(_id: string, newTitle: string) => emit('rename', _id, newTitle)"
     />
 
     <button
