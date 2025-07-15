@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import HistoryList from '@/components/history/HistoryList.vue';
+import SearchModal from '@/components/history/SearchModal.vue';
+import { ref } from 'vue';
 import { useAuth } from '../../stores/useAuthStore';
 import { useHistoryStore } from '../../stores/useHistoryStore';
 
@@ -19,8 +21,14 @@ const emit = defineEmits<{ close: [] }>();
 /* Stores                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const auth = useAuth();            // User authentication data
+const auth = useAuth();             // User authentication data
 const history = useHistoryStore(); // Chat history sessions
+
+/* -------------------------------------------------------------------------- */
+/* State                                                                      */
+/* -------------------------------------------------------------------------- */
+
+const searchOpen = ref(false); // Controls visibility of the search modal
 
 /* -------------------------------------------------------------------------- */
 /* Handlers                                                                   */
@@ -28,7 +36,7 @@ const history = useHistoryStore(); // Chat history sessions
 
 /**
  * Sets the selected session as active using its timestamp
- * 
+ *
  * @param {string} timestamp - ISO timestamp of the session to activate
  */
 function onSelectSession(timestamp: string) {
@@ -46,7 +54,7 @@ function onNewChat() {
 
 /**
  * Deletes a session by its MongoDB _id
- * 
+ *
  * @param {string} _id - Unique MongoDB identifier of the session
  */
 function onDeleteSession(_id: string) {
@@ -55,7 +63,7 @@ function onDeleteSession(_id: string) {
 
 /**
  * Renames a session by its MongoDB _id
- * 
+ *
  * @param {string} _id - Unique MongoDB identifier of the session
  * @param {string} newTitle - The new title to apply to the session
  */
@@ -66,10 +74,12 @@ function onRenameSession(_id: string, newTitle: string) {
 
 <template>
   <aside
-    :class="[ 'fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-700 p-4',
-              'transition-transform duration-300 z-50',
-              open ? 'translate-x-0' : '-translate-x-full',
-              'md:static md:translate-x-0 md:h-auto' ]"
+    :class="[
+      'fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-700 p-4',
+      'transition-transform duration-300 z-50',
+      open ? 'translate-x-0' : '-translate-x-full',
+      'md:static md:translate-x-0 md:h-auto'
+    ]"
   >
     <!-- Close button (desktop) -->
     <button
@@ -101,8 +111,8 @@ function onRenameSession(_id: string, newTitle: string) {
           <span>🖊</span> New Chat
         </button>
         <button
-          disabled
-          class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 bg-slate-800 border border-slate-600 rounded cursor-not-allowed"
+          @click="searchOpen = true"
+          class="w-full flex items-center gap-2 px-4 py-2 text-sm text-white bg-slate-800 border border-slate-600 rounded hover:bg-slate-700 transition"
         >
           <span>🔍</span> Search Chats
         </button>
@@ -128,5 +138,8 @@ function onRenameSession(_id: string, newTitle: string) {
         Log in to view your chat history.
       </div>
     </template>
+
+    <!-- Modal: Search Chat Sessions -->
+    <SearchModal :open="searchOpen" @close="searchOpen = false" />
   </aside>
 </template>
