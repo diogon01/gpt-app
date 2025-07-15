@@ -1,17 +1,20 @@
-<!-- packages/web/src/components/chat/MessageBubble.vue -->
+<!-- apps/web/src/components/chat/MessageBubble.vue -->
 <script setup lang="ts">
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import MarkdownIt from 'markdown-it';
 import { computed } from 'vue';
 
+/**
+ * Props representing the content of a single user-assistant exchange.
+ */
 const props = defineProps<{
   prompt: string;
   response: { text?: string; imgUrl?: string };
   loading?: boolean;
 }>();
 
-/** true when we have any assistant output or we’re still loading */
+/** True when assistant content exists or is being generated */
 const hasAssistant = computed(
   () => props.loading || !!props.response.text || !!props.response.imgUrl,
 );
@@ -27,6 +30,7 @@ const md = new MarkdownIt().set({
   },
 });
 
+/** Renders assistant text with markdown and syntax highlighting */
 const rendered = computed(() =>
   props.response.text ? md.render(props.response.text) : '',
 );
@@ -64,7 +68,7 @@ const rendered = computed(() =>
     <!-- Image -->
     <img v-if="props.response.imgUrl" :src="props.response.imgUrl" class="mb-3 w-full rounded" />
 
-    <!-- Text -->
+    <!-- Markdown Text -->
     <div
       v-if="props.response.text && !props.loading"
       v-html="rendered"

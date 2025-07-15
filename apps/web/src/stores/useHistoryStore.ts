@@ -82,6 +82,51 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
+         * Fetches a specific session by ID and sets it as the active session.
+         * Also caches it locally if it doesn't exist in the current history list.
+         *
+         * @param id - The MongoDB ObjectId of the session to retrieve
+         */
+        async fetchById(id: string) {
+            this.loading = true;
+            try {
+                const authStore = useAuth();
+                if (!authStore.firebaseUser) throw new Error('User not authenticated');
+
+                const token = await authStore.firebaseUser.getIdToken();
+                const res = await fetch(`/api/history/${encodeURIComponent(id)}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!res.ok) throw new Error('Failed to fetch session');
+
+                const data = await res.json();
+
+                const session: UserHistoryEntry = {
+                    _id: data._id,
+                    timestamp: new Date(data.timestamp),
+                    messages: data.messages.map((m: any) => ({
+                        ...m,
+                        timestamp: new Date(m.timestamp),
+                    })),
+                };
+
+                this.activeSession = session;
+
+                const alreadyExists = this.history.some((s) => s._id === session._id);
+                if (!alreadyExists) {
+                    this.history.unshift(session);
+                }
+            } catch (err) {
+                console.error('Error fetching session by ID:', err);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        /**
          * Renames a specific session by sending a PATCH request to the API.
          * Also updates the session title locally in the store.
          *
@@ -105,7 +150,6 @@ export const useHistoryStore = defineStore('history', {
 
                 if (!res.ok) throw new Error('Failed to rename session');
 
-                // Update local session title
                 const session = this.history.find((h) => h._id === _id);
                 if (session) {
                     const userMsg = session.messages.find((m) => m.role === 'user');
@@ -137,10 +181,8 @@ export const useHistoryStore = defineStore('history', {
 
                 if (!res.ok) throw new Error('Failed to delete session');
 
-                // Remove session locally
                 this.history = this.history.filter((session) => session._id !== _id);
 
-                // Reset active session if it was the one deleted
                 if (this.activeSession?._id === _id) {
                     this.activeSession = this.history[0] ?? null;
                 }
