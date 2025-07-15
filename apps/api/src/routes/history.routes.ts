@@ -1,6 +1,8 @@
 // apps/api/src/routes/history.routes.ts
+
 import { Router } from 'express';
 import {
+  deleteHistorySession,
   getUserHistory,
   renameHistorySession,
 } from '../controllers/history.controller';
@@ -8,15 +10,24 @@ import {
 const router = Router();
 
 /**
- * GET /
- * Ex: /history/
+ * @route GET /history
+ * @desc Returns the authenticated user's history list
+ * @access Private
  */
 router.get('/', getUserHistory);
 
 /**
- * PATCH /:sessionId
- * Ex: /history/:sessionId
+ * @route PATCH /history/:sessionId
+ * @desc Renames a specific session for the authenticated user
+ * @access Private
  */
 router.patch('/:sessionId', renameHistorySession);
+
+/**
+ * @route DELETE /history/:sessionId
+ * @desc Deletes a specific session for the authenticated user
+ * @access Private
+ */
+router.delete('/:sessionId', deleteHistorySession);
 
 export default router;

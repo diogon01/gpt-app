@@ -88,3 +88,36 @@ export const renameHistorySession: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+/**
+ * DELETE /history/:sessionId
+ *
+ * Deletes a user's specific history session by MongoDB _id
+ *
+ * @param req - Express Request object
+ * @param res - Express Response object
+ * @param next - Express NextFunction callback
+ * @returns void
+ */
+export const deleteHistorySession: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { sessionId } = req.params;
+
+    await HistoryService.deleteSession(req.user.id, sessionId);
+
+    res.status(204).send();
+  } catch (error) {
+    if ((error as Error).message === 'SESSION_NOT_FOUND') {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+    next(error);
+  }
+};

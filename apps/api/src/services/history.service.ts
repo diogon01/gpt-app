@@ -106,4 +106,30 @@ export class HistoryService {
       throw new Error('SESSION_NOT_FOUND');
     }
   }
+
+
+  /**
+   * Deletes a single prompt session belonging to the user
+   *
+   * @param userId - Firebase UID of the user
+   * @param sessionId - The session's MongoDB ObjectId as string (_id)
+   * @returns void
+   * @throws Error if session is not found
+   */
+  static async deleteSession(
+    userId: string,
+    sessionId: string
+  ): Promise<void> {
+    const db = await getMongoClient();
+    const collection = db.collection(COLLECTION_NAME);
+
+    const result = await collection.deleteOne({
+      userId,
+      _id: new ObjectId(sessionId),
+    });
+
+    if (result.deletedCount === 0) {
+      throw new Error('SESSION_NOT_FOUND');
+    }
+  }
 }
