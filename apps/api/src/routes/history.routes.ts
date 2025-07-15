@@ -1,3 +1,4 @@
+// apps/api/src/routes/history.routes.ts
 import { Router } from 'express';
 import {
   getUserHistory,
@@ -7,15 +8,15 @@ import {
 const router = Router();
 
 /**
- * GET /history
- * Returns the authenticated user's history
+ * GET /
+ * Ex: /history/
  */
-router.get('/history', getUserHistory);
+router.get('/', getUserHistory);
 
 /**
- * PATCH /history/:sessionId
- * Renames a specific session for the authenticated user
+ * PATCH /:sessionId
+ * Ex: /history/:sessionId
  */
-router.patch('/history/:sessionId', renameHistorySession);
+router.patch('/:sessionId', renameHistorySession);
 
 export default router;

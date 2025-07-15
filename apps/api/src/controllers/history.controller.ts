@@ -4,7 +4,6 @@ import { mapUserHistoryToDTO } from '@42robotics/domain/src/mappers/user-history
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { HistoryService } from '../services/history.service';
 
-
 /**
  * GET /history
  *
@@ -35,7 +34,6 @@ export const getUserHistory = async (
     const rawHistory = await HistoryService.getUserHistory(req.user.id);
     console.log(`📦 [getUserHistory] Found ${rawHistory.length} history entries`);
 
-    // Manually construct the response object to match frontend expectations
     const response = mapUserHistoryToDTO({
       userId: req.user.id,
       sessions: rawHistory,
@@ -43,9 +41,7 @@ export const getUserHistory = async (
       updatedAt: new Date(),
     });
 
-
     res.status(200).json(response);
-
     console.log('✅ [getUserHistory] Response sent');
   } catch (error) {
     console.error('❌ [getUserHistory] Error:', error);
@@ -56,7 +52,7 @@ export const getUserHistory = async (
 /**
  * PATCH /history/:sessionId
  *
- * Renames a user's specific history session, identified by the session's timestamp.
+ * Renames a user's specific history session, identified by the session's MongoDB ObjectId.
  *
  * @param req - Express Request object
  * @param res - Express Response object
@@ -78,17 +74,11 @@ export const renameHistorySession: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    const timestamp = new Date(sessionId);
-    if (isNaN(timestamp.getTime())) {
-      res.status(400).json({ error: 'Invalid sessionId' });
-      return;
-    }
-
-    await HistoryService.renameSession(req.user.id, timestamp, {
+    // ✅ Trata sessionId como string (_id)
+    await HistoryService.renameSession(req.user.id, sessionId, {
       title: body.title.trim(),
     });
 
-    // 204: No Content (success without body)
     res.status(204).send();
   } catch (error) {
     if ((error as Error).message === 'SESSION_NOT_FOUND') {

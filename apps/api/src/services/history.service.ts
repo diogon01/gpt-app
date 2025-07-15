@@ -1,6 +1,7 @@
 import { MessageRole, UserHistoryEntryEntity } from '@42robotics/domain';
 import { HistoryRenameRequestDTO } from '@42robotics/domain/src/dtos/request/history-rename-request.dto';
 import { getMongoClient } from '@42robotics/infra/src/config/mongoClient';
+import { ObjectId } from 'mongodb';
 
 const COLLECTION_NAME = '42r_prompt_results_prod';
 
@@ -80,24 +81,24 @@ export class HistoryService {
   }
 
   /**
-   * Renames a single prompt session belonging to the user
-   *
-   * @param userId - Firebase UID of the user
-   * @param timestamp - Timestamp used as unique session ID
-   * @param data - New title passed in the request
-   * @returns The result of the update operation
-   * @throws Error if session is not found
-   */
+  * Renames a single prompt session belonging to the user
+  *
+  * @param userId - Firebase UID of the user
+  * @param sessionId - The session's MongoDB ObjectId as string (_id)
+  * @param data - New title passed in the request
+  * @returns The result of the update operation
+  * @throws Error if session is not found
+  */
   static async renameSession(
     userId: string,
-    timestamp: Date,
+    sessionId: string,
     data: HistoryRenameRequestDTO
   ): Promise<void> {
     const db = await getMongoClient();
     const collection = db.collection(COLLECTION_NAME);
 
     const result = await collection.updateOne(
-      { userId, createdAt: new Date(timestamp) },
+      { userId, _id: new ObjectId(sessionId) },
       { $set: { prompt: data.title } }
     );
 
