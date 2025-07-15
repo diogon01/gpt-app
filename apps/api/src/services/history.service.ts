@@ -27,27 +27,33 @@ export class HistoryService {
       .sort({ createdAt: -1 })
       .toArray();
 
-    return results.map((entry) => ({
-      _id: entry._id.toString(),
-      timestamp: entry.createdAt,
-      messages: [
-        {
-          role: MessageRole.User,
-          content: entry.prompt ?? '',
-          timestamp: entry.createdAt,
-        },
-        {
-          role: MessageRole.Assistant,
-          content:
-            typeof entry.response === 'string'
-              ? entry.response
-              : JSON.stringify(entry.response),
-          timestamp: entry.createdAt,
-        },
-      ],
-    }));
+    return results.map((entry) => HistoryService.mapEntryToSession(entry));
   }
 
+  /**
+   * Performs a case-insensitive search across prompt and response fields
+   *
+   * @param userId - Firebase UID of the user
+   * @param query - Search term to match against prompt or response
+   * @returns Matching user history sessions
+   */
+  static async searchSessions(userId: string, query: string): Promise<UserHistoryEntryEntity[]> {
+    const db = await getMongoClient();
+    const collection = db.collection(COLLECTION_NAME);
+
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
+
+    const results = await collection
+      .find({
+        userId,
+        $or: [{ prompt: regex }, { response: regex }],
+      })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return results.map((entry) => HistoryService.mapEntryToSession(entry));
+  }
 
   /**
    * Saves a prompt and its response to the history collection
@@ -81,14 +87,14 @@ export class HistoryService {
   }
 
   /**
-  * Renames a single prompt session belonging to the user
-  *
-  * @param userId - Firebase UID of the user
-  * @param sessionId - The session's MongoDB ObjectId as string (_id)
-  * @param data - New title passed in the request
-  * @returns The result of the update operation
-  * @throws Error if session is not found
-  */
+   * Renames a single prompt session belonging to the user
+   *
+   * @param userId - Firebase UID of the user
+   * @param sessionId - The session's MongoDB ObjectId as string (_id)
+   * @param data - New title passed in the request
+   * @returns The result of the update operation
+   * @throws Error if session is not found
+   */
   static async renameSession(
     userId: string,
     sessionId: string,
@@ -106,7 +112,6 @@ export class HistoryService {
       throw new Error('SESSION_NOT_FOUND');
     }
   }
-
 
   /**
    * Deletes a single prompt session belonging to the user
@@ -131,5 +136,32 @@ export class HistoryService {
     if (result.deletedCount === 0) {
       throw new Error('SESSION_NOT_FOUND');
     }
+  }
+
+  /**
+   * Maps a raw MongoDB entry into a UserHistoryEntryEntity
+   *
+   * @param entry - Raw MongoDB document
+   * @returns Mapped session entity
+   */
+  private static mapEntryToSession(entry: any): UserHistoryEntryEntity {
+    return {
+      _id: entry._id.toString(),
+      timestamp: entry.createdAt,
+      messages: [
+        {
+          role: MessageRole.User,
+          content: entry.prompt ?? '',
+          timestamp: entry.createdAt,
+        },
+        {
+          role: MessageRole.Assistant,
+          content: typeof entry.response === 'string'
+            ? entry.response
+            : JSON.stringify(entry.response),
+          timestamp: entry.createdAt,
+        },
+      ],
+    };
   }
 }

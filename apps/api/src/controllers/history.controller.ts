@@ -1,38 +1,29 @@
-// packages/server/src/controllers/history.controller.ts
+// apps/api/src/controllers/history.controller.ts
+
 import { HistoryRenameRequestDTO } from '@42robotics/domain/src';
+import { HistorySearchResponseDTO } from '@42robotics/domain/src/dtos/response/history-search-response.dto';
 import { mapUserHistoryToDTO } from '@42robotics/domain/src/mappers/user-history.mapper';
-import { NextFunction, Request, RequestHandler, Response } from 'express';
+import { RequestHandler } from 'express';
 import { HistoryService } from '../services/history.service';
 
 /**
- * GET /history
+ * Retrieves the authenticated user's full conversation history.
  *
- * Retrieves the authenticated user's conversation history and returns it
- * with the expected `sessions` key used by the frontend.
- *
- * @param req - Express Request object
- * @param res - Express Response object
- * @param next - Express NextFunction callback
- * @returns void
+ * @route GET /history
+ * @access Private
+ * @param req - Express request object containing the authenticated user
+ * @param res - Express response object used to send the response
+ * @param next - Express next middleware function for error handling
+ * @returns Sends a 200 response with the mapped history or 401 if unauthorized
  */
-export const getUserHistory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> => {
+export const getUserHistory: RequestHandler = async (req, res, next) => {
   try {
-    console.log('📥 [getUserHistory] Incoming request');
-
     if (!req.user?.id) {
-      console.warn('⚠️ [getUserHistory] Unauthorized access attempt');
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    console.log(`🔐 [getUserHistory] Authenticated user: ${req.user.id}`);
-
     const rawHistory = await HistoryService.getUserHistory(req.user.id);
-    console.log(`📦 [getUserHistory] Found ${rawHistory.length} history entries`);
 
     const response = mapUserHistoryToDTO({
       userId: req.user.id,
@@ -42,22 +33,20 @@ export const getUserHistory = async (
     });
 
     res.status(200).json(response);
-    console.log('✅ [getUserHistory] Response sent');
   } catch (error) {
-    console.error('❌ [getUserHistory] Error:', error);
     next(error);
   }
 };
 
 /**
- * PATCH /history/:sessionId
+ * Updates the title of a specific history session by session ID.
  *
- * Renames a user's specific history session, identified by the session's MongoDB ObjectId.
- *
- * @param req - Express Request object
- * @param res - Express Response object
- * @param next - Express NextFunction callback
- * @returns void
+ * @route PATCH /history/:sessionId
+ * @access Private
+ * @param req - Express request object containing sessionId and new title
+ * @param res - Express response object
+ * @param next - Express next middleware function for error handling
+ * @returns Sends a 204 No Content response on success, or appropriate error status
  */
 export const renameHistorySession: RequestHandler = async (req, res, next) => {
   try {
@@ -74,7 +63,6 @@ export const renameHistorySession: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    // ✅ Trata sessionId como string (_id)
     await HistoryService.renameSession(req.user.id, sessionId, {
       title: body.title.trim(),
     });
@@ -89,17 +77,15 @@ export const renameHistorySession: RequestHandler = async (req, res, next) => {
   }
 };
 
-
-
 /**
- * DELETE /history/:sessionId
+ * Deletes a specific history session by session ID.
  *
- * Deletes a user's specific history session by MongoDB _id
- *
- * @param req - Express Request object
- * @param res - Express Response object
- * @param next - Express NextFunction callback
- * @returns void
+ * @route DELETE /history/:sessionId
+ * @access Private
+ * @param req - Express request object with sessionId and authenticated user
+ * @param res - Express response object
+ * @param next - Express next middleware function for error handling
+ * @returns Sends a 204 No Content response on success, or 404 if not found
  */
 export const deleteHistorySession: RequestHandler = async (req, res, next) => {
   try {
@@ -108,9 +94,7 @@ export const deleteHistorySession: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    const { sessionId } = req.params;
-
-    await HistoryService.deleteSession(req.user.id, sessionId);
+    await HistoryService.deleteSession(req.user.id, req.params.sessionId);
 
     res.status(204).send();
   } catch (error) {
@@ -118,6 +102,43 @@ export const deleteHistorySession: RequestHandler = async (req, res, next) => {
       res.status(404).json({ error: 'Session not found' });
       return;
     }
+    next(error);
+  }
+};
+
+/**
+ * Searches user history messages for a matching query string.
+ *
+ * @route GET /history/search?q={query}
+ * @access Private
+ * @param req - Express request with query parameter `q`
+ * @param res - Express response object
+ * @param next - Express next middleware function for error handling
+ * @returns Sends a 200 response with an array of matches or appropriate error
+ */
+export const searchUserHistory: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const query = (req.query.q as string)?.trim();
+    if (!query || query.length < 2) {
+      res.status(400).json({ error: 'Query param "q" must be at least 2 characters' });
+      return;
+    }
+
+    const matches = await HistoryService.searchSessions(req.user.id, query);
+
+    const response: HistorySearchResponseDTO = {
+      matches,
+      total: matches.length,
+      query,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
     next(error);
   }
 };
