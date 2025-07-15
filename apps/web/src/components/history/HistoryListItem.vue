@@ -1,50 +1,66 @@
-<!-- apps/web/src/components/history/HistoryListItem.vue -->
 <script setup lang="ts">
+import Icon from '@/components/shared/Icon.vue'; // Reusable SVG icon component
 import { nextTick, ref } from 'vue';
 
 /**
- * Props definition
- * @property {string} label - The visible prompt text for the session
- * @property {string} timestamp - ISO string used as unique session key
- * @property {boolean} active - Whether this session is the active one
+ * Props
+ * @property {string} label - Displayed session label
+ * @property {string} timestamp - Session unique identifier
+ * @property {boolean} active - Whether this session is selected
+ * @property {boolean} isPlus - Whether the user is a Plus subscriber (optional)
  */
 defineProps<{
   label: string;
   timestamp: string;
   active: boolean;
+  isPlus?: boolean;
 }>();
 
 /**
- * Emitted events
- * @event select - Emitted when the item is clicked
- * @event delete - Emitted when the delete option is selected
+ * Events emitted by this component
+ * @event select - Fired when user selects a session
+ * @event delete - Fired when user clicks "Delete"
+ * @event rename - Fired when user clicks "Rename"
+ * @event share - Fired when user clicks "Share"
+ * @event removeFromProject - Fired when user clicks "Remove from project" (Plus only)
+ * @event archive - Fired when user clicks "Archive"
  */
 const emit = defineEmits<{
   select: [timestamp: string];
   delete: [timestamp: string];
+  rename: [timestamp: string];
+  share: [timestamp: string];
+  removeFromProject: [timestamp: string];
+  archive: [timestamp: string];
 }>();
 
-/**
- * Whether the menu is open
- * @type {import('vue').Ref<boolean>}
- */
+// Menu state
 const open = ref(false);
+const menuX = ref(0);
+const menuY = ref(0);
 
 /**
- * Toggles the visibility of the menu
- * @param {MouseEvent} e - The click event
+ * Toggles the context menu and calculates screen position
+ * @param {MouseEvent} e - Button click event
  */
 function toggleMenu(e: MouseEvent) {
   e.stopPropagation();
   open.value = !open.value;
-  if (open.value)
+
+  if (open.value) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    menuX.value = rect.left + rect.width - 180;
+    menuY.value = rect.top + rect.height + 6;
+
     nextTick(() => {
-      // Close on outside click
       window.addEventListener('click', closeOnce, { once: true });
     });
+  }
 }
 
-/** Closes the menu */
+/**
+ * Closes the menu when clicking outside
+ */
 function closeOnce() {
   open.value = false;
 }
@@ -59,10 +75,10 @@ function closeOnce() {
     }"
     @click="emit('select', timestamp)"
   >
-    <!-- Session label -->
+    <!-- Label -->
     <span class="pr-2 truncate">{{ label }}</span>
 
-    <!-- Menu trigger button (visible only on hover) -->
+    <!-- Menu button -->
     <button
       class="invisible group-hover:visible rounded p-1 hover:bg-slate-700 transition"
       @click.stop="toggleMenu"
@@ -70,18 +86,61 @@ function closeOnce() {
       ⋯
     </button>
 
-    <!-- Context menu -->
-    <div
-      v-if="open"
-      class="absolute right-0 top-6 z-10 w-28 rounded-md bg-slate-800
-             py-1 text-left shadow-lg border border-slate-600"
-    >
-      <button
-        class="block w-full px-3 py-1 text-red-400 hover:bg-slate-700 text-xs"
-        @click.stop="emit('delete', timestamp); open = false"
+    <!-- Teleported context menu -->
+    <Teleport to="body">
+      <div
+        v-if="open"
+        :style="{
+          position: 'absolute',
+          top: `${menuY}px`,
+          left: `${menuX}px`,
+          zIndex: 9999
+        }"
+        class="w-56 rounded-md bg-slate-800 py-1 text-left shadow-xl border border-slate-600"
       >
-        Delete
-      </button>
-    </div>
+        <!-- Shared: Share -->
+        <button
+          class="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-100 hover:bg-slate-700"
+          @click.stop="emit('share', timestamp); open = false"
+        >
+          <Icon name="share" /> Share
+        </button>
+
+        <!-- Shared: Rename -->
+        <button
+          class="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-100 hover:bg-slate-700"
+          @click.stop="emit('rename', timestamp); open = false"
+        >
+          <Icon name="rename" /> Rename
+        </button>
+
+        <!-- Plus only: Remove from project -->
+        <button
+          v-if="isPlus"
+          class="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-100 hover:bg-slate-700"
+          @click.stop="emit('removeFromProject', timestamp); open = false"
+        >
+          <Icon name="remove" /> Remove from project
+        </button>
+
+        <!-- Shared: Archive -->
+        <button
+          class="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-100 hover:bg-slate-700"
+          @click.stop="emit('archive', timestamp); open = false"
+        >
+          <Icon name="archive" /> Archive
+        </button>
+
+        <hr class="my-1 border-slate-600" />
+
+        <!-- Shared: Delete -->
+        <button
+          class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-slate-700"
+          @click.stop="emit('delete', timestamp); open = false"
+        >
+          <Icon name="delete" /> Delete
+        </button>
+      </div>
+    </Teleport>
   </li>
 </template>

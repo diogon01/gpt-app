@@ -4,24 +4,47 @@ import HistoryList from '@/components/history/HistoryList.vue';
 import { useAuth } from '../../stores/useAuthStore';
 import { useHistoryStore } from '../../stores/useHistoryStore';
 
+/**
+ * Props
+ * @property {boolean} open - Controls the visibility of the sidebar
+ */
 defineProps<{ open: boolean }>();
+
+/**
+ * Emitted events
+ * @event close - Triggered when the user closes the sidebar
+ */
 const emit = defineEmits<{ close: [] }>();
 
+// Store for user authentication state
 const auth = useAuth();
+
+// Store for user chat history and sessions
 const history = useHistoryStore();
 
+/**
+ * Handles selection of a session from the history list
+ * @param {string} timestamp - The session timestamp identifier
+ */
 function onSelectSession(timestamp: string) {
   history.setActiveSessionByTimestamp(timestamp);
   emit('close');
 }
 
+/**
+ * Starts a new chat session
+ */
 function onNewChat() {
   history.startNewSession();
   emit('close');
 }
 
+/**
+ * Handles the deletion of a session
+ * @param {string} timestamp - The session timestamp identifier
+ */
 function onDeleteSession(timestamp: string) {
-  // Por enquanto apenas loga — substitua por lógica real se desejar
+  // Placeholder for delete logic — currently logs only
   console.log('Excluir sessão:', timestamp);
 }
 </script>
@@ -29,13 +52,18 @@ function onDeleteSession(timestamp: string) {
 <template>
   <aside
     :class="[
+      // Base sidebar styling
       'fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-700 p-4',
-      'transition-transform duration-300 z-40',
+      // Animation and layering
+      'transition-transform duration-300 z-50',
+      // Slide-in / slide-out behavior for mobile
       open ? 'translate-x-0' : '-translate-x-full',
-      'md:static md:translate-x-0 md:h-auto md:z-0'
+      // Responsive behavior for desktop
+      'md:static md:translate-x-0 md:h-auto'
+      // NOTE: md:z-0 was removed to prevent z-index stacking issues
     ]"
   >
-    <!-- Botão fixo de fechar (desktop) -->
+    <!-- Close button (desktop) -->
     <button
       title="Fechar"
       @click="emit('close')"
@@ -46,7 +74,7 @@ function onDeleteSession(timestamp: string) {
       </svg>
     </button>
 
-    <!-- Botão fechar (mobile) -->
+    <!-- Close button (mobile only) -->
     <button
       class="mb-4 flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 md:hidden"
       @click="emit('close')"
@@ -55,7 +83,7 @@ function onDeleteSession(timestamp: string) {
     </button>
 
     <template v-if="auth.isLoggedIn">
-      <!-- Ações -->
+      <!-- Sidebar actions -->
       <div class="space-y-3 mb-6">
         <button
           @click="onNewChat"
@@ -71,7 +99,7 @@ function onDeleteSession(timestamp: string) {
         </button>
       </div>
 
-      <!-- Histórico -->
+      <!-- Chat history section -->
       <h2 class="mb-2 text-sm font-semibold text-slate-300 uppercase tracking-wide">Histórico</h2>
       <HistoryList
         :items="history.summaryItems"
@@ -82,6 +110,7 @@ function onDeleteSession(timestamp: string) {
     </template>
 
     <template v-else>
+      <!-- Message for unauthenticated users -->
       <div class="text-sm text-slate-400 mt-8">
         Faça login para visualizar seu histórico.
       </div>
