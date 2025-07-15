@@ -1,38 +1,26 @@
-// ─────────────────────────────────────────────────────────────
-// Domain entities representing core user and auth models
-// ─────────────────────────────────────────────────────────────
+// Entidades
 export * from './entities/auth-tokens';
 export * from './entities/mongo-user';
-export * from './entities/user';
+export * from './entities/User';
+export * from './entities/user-history-entry.entity';
+export * from './entities/user-history.entity';
+export * from './entities/user-message.entity';
 
-// ─────────────────────────────────────────────────────────────
-// Data Transfer Objects used for input/output validation
-// ─────────────────────────────────────────────────────────────
+// DTOs de Resposta
 export * from './dtos/create-user.dto';
-export * from './dtos/user-history-entry.dto';
-export * from './dtos/user-history.dto';
+export * from './dtos/user-history-entry-response.dto';
+export * from './dtos/user-history-response.dto';
+export * from './dtos/user-message-response.dto';
 export * from './dtos/verify-assertion.dto';
 
-// ─────────────────────────────────────────────────────────────
-// Interfaces representing conversation and message structures
-// ─────────────────────────────────────────────────────────────
-export * from './interfaces/user-history.interface';
-export * from './interfaces/user-message.interface';
-
-// ─────────────────────────────────────────────────────────────
-// Mapper functions to convert between raw input and DTOs
-// ─────────────────────────────────────────────────────────────
+// Mappers
+export * from './mappers/user-history.mapper';
 export * from './mappers/verify-assertion-mapper';
 
-// ─────────────────────────────────────────────────────────────
-// Repository and service layers for domain logic and persistence
-// ─────────────────────────────────────────────────────────────
+// Repositórios
 export * from './repositories/user-repository';
 
-
-// ─────────────────────────────────────────────────────────────
-// Enums representing supported providers, services and plans
-// ─────────────────────────────────────────────────────────────
+// Enums
 export * from './enums/auth-provider';
 export * from './enums/message-role.enum';
 export * from './enums/service-name';
