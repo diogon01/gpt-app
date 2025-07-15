@@ -1,17 +1,20 @@
 // Entidades
 export * from './entities/auth-tokens';
 export * from './entities/mongo-user';
-export * from './entities/User';
+export * from './entities/user';
 export * from './entities/user-history-entry.entity';
 export * from './entities/user-history.entity';
 export * from './entities/user-message.entity';
 
 // DTOs de Resposta
 export * from './dtos/create-user.dto';
+export * from './dtos/response/user-history-response.dto';
 export * from './dtos/user-history-entry-response.dto';
-export * from './dtos/user-history-response.dto';
 export * from './dtos/user-message-response.dto';
 export * from './dtos/verify-assertion.dto';
+
+// DTOs de Requisição
+export * from './dtos/request/history-rename-request.dto';
 
 // Mappers
 export * from './mappers/user-history.mapper';

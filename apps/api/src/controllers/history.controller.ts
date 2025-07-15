@@ -1,19 +1,26 @@
+// packages/server/src/controllers/history.controller.ts
+import { HistoryRenameRequestDTO } from '@42robotics/domain/src';
 import { mapUserHistoryToDTO } from '@42robotics/domain/src/mappers/user-history.mapper';
-import { RequestHandler } from 'express';
+import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { HistoryService } from '../services/history.service';
+
 
 /**
  * GET /history
  *
- * Retrieves the user's conversation history, maps it to a DTO, and returns it.
- * 
- * @param req - Express request object, expects authenticated user in req.user
- * @param res - Express response object
- * @param next - Express next middleware function for error handling
- * 
- * @returns JSON response containing user's chat history
+ * Retrieves the authenticated user's conversation history and returns it
+ * with the expected `sessions` key used by the frontend.
+ *
+ * @param req - Express Request object
+ * @param res - Express Response object
+ * @param next - Express NextFunction callback
+ * @returns void
  */
-export const getUserHistory: RequestHandler = async (req, res, next) => {
+export const getUserHistory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     console.log('📥 [getUserHistory] Incoming request');
 
@@ -28,6 +35,7 @@ export const getUserHistory: RequestHandler = async (req, res, next) => {
     const rawHistory = await HistoryService.getUserHistory(req.user.id);
     console.log(`📦 [getUserHistory] Found ${rawHistory.length} history entries`);
 
+    // Manually construct the response object to match frontend expectations
     const response = mapUserHistoryToDTO({
       userId: req.user.id,
       sessions: rawHistory,
@@ -35,10 +43,58 @@ export const getUserHistory: RequestHandler = async (req, res, next) => {
       updatedAt: new Date(),
     });
 
-    console.log('✅ [getUserHistory] Sending mapped response');
+
     res.status(200).json(response);
+
+    console.log('✅ [getUserHistory] Response sent');
   } catch (error) {
     console.error('❌ [getUserHistory] Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * PATCH /history/:sessionId
+ *
+ * Renames a user's specific history session, identified by the session's timestamp.
+ *
+ * @param req - Express Request object
+ * @param res - Express Response object
+ * @param next - Express NextFunction callback
+ * @returns void
+ */
+export const renameHistorySession: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { sessionId } = req.params;
+    const body = req.body as HistoryRenameRequestDTO;
+
+    if (!body?.title?.trim()) {
+      res.status(400).json({ error: 'Title is required' });
+      return;
+    }
+
+    const timestamp = new Date(sessionId);
+    if (isNaN(timestamp.getTime())) {
+      res.status(400).json({ error: 'Invalid sessionId' });
+      return;
+    }
+
+    await HistoryService.renameSession(req.user.id, timestamp, {
+      title: body.title.trim(),
+    });
+
+    // 204: No Content (success without body)
+    res.status(204).send();
+  } catch (error) {
+    if ((error as Error).message === 'SESSION_NOT_FOUND') {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
     next(error);
   }
 };

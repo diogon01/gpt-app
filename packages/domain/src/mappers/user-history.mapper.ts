@@ -1,5 +1,6 @@
+import { UserHistoryResponseDTO } from '../dtos/response/user-history-response.dto';
 import { UserHistoryEntryResponseDTO } from '../dtos/user-history-entry-response.dto';
-import { UserHistoryResponseDTO } from '../dtos/user-history-response.dto';
+
 import { UserMessageResponseDTO } from '../dtos/user-message-response.dto';
 
 import { UserHistoryEntity } from '../entities/user-history.entity';
@@ -14,7 +15,7 @@ import { UserMessageEntity } from '../entities/user-message.entity';
 export function mapUserHistoryToDTO(userHistory: UserHistoryEntity): UserHistoryResponseDTO {
   return {
     firebaseUid: userHistory.userId,
-    history: userHistory.sessions.map(entry => mapEntryToDTO(entry)),
+    sessions: userHistory.sessions.map(entry => mapEntryToDTO(entry)),
   };
 }
 
