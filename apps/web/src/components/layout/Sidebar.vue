@@ -6,61 +6,65 @@ import { useHistoryStore } from '../../stores/useHistoryStore';
 
 /**
  * Props
- * @property {boolean} open - Controls the visibility of the sidebar
+ * @property {boolean} open - Controls sidebar visibility (mobile)
  */
 defineProps<{ open: boolean }>();
 
 /**
- * Emitted events
- * @event close - Triggered when the user closes the sidebar
+ * Emits
+ * @event close - Fired when user requests to hide the sidebar
  */
 const emit = defineEmits<{ close: [] }>();
 
-// Store for user authentication state
-const auth = useAuth();
+/* -------------------------------------------------------------------------- */
+/* Stores                                                                     */
+/* -------------------------------------------------------------------------- */
 
-// Store for user chat history and sessions
-const history = useHistoryStore();
+const auth = useAuth();            // user authentication data
+const history = useHistoryStore(); // chat history sessions
+
+/* -------------------------------------------------------------------------- */
+/* Handlers                                                                   */
+/* -------------------------------------------------------------------------- */
 
 /**
- * Handles selection of a session from the history list
- * @param {string} timestamp - The session timestamp identifier
+ * Activates a session when user clicks on it
+ * @param timestamp - ISO timestamp used as session identifier
  */
 function onSelectSession(timestamp: string) {
   history.setActiveSessionByTimestamp(timestamp);
   emit('close');
 }
 
-/**
- * Starts a new chat session
- */
+/** Creates a brand-new chat session */
 function onNewChat() {
   history.startNewSession();
   emit('close');
 }
 
-/**
- * Handles the deletion of a session
- * @param {string} timestamp - The session timestamp identifier
- */
+/** Removes a session (placeholder) */
 function onDeleteSession(timestamp: string) {
-  // Placeholder for delete logic — currently logs only
-  console.log('Excluir sessão:', timestamp);
+  // TODO: Implement delete logic
+  console.log('[Sidebar] Delete session:', timestamp);
+}
+
+/**
+ * Persists inline rename emitted by HistoryListItem
+ * @param timestamp - Session identifier
+ * @param newTitle  - New title entered by the user
+ */
+function onRenameSession(timestamp: string, newTitle: string) {
+  history.renameSession(timestamp, newTitle);
 }
 </script>
 
 <template>
   <aside
     :class="[
-      // Base sidebar styling
       'fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-700 p-4',
-      // Animation and layering
       'transition-transform duration-300 z-50',
-      // Slide-in / slide-out behavior for mobile
       open ? 'translate-x-0' : '-translate-x-full',
-      // Responsive behavior for desktop
-      'md:static md:translate-x-0 md:h-auto'
-      // NOTE: md:z-0 was removed to prevent z-index stacking issues
+      'md:static md:translate-x-0 md:h-auto', // desktop reset
     ]"
   >
     <!-- Close button (desktop) -->
@@ -69,12 +73,18 @@ function onDeleteSession(timestamp: string) {
       @click="emit('close')"
       class="absolute top-4 -right-4 z-50 hidden md:block bg-slate-700 hover:bg-slate-600 text-white p-1 rounded-r shadow"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
 
-    <!-- Close button (mobile only) -->
+    <!-- Close button (mobile) -->
     <button
       class="mb-4 flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 md:hidden"
       @click="emit('close')"
@@ -82,8 +92,9 @@ function onDeleteSession(timestamp: string) {
       ✕ Fechar
     </button>
 
+    <!-- Authenticated view ------------------------------------------------- -->
     <template v-if="auth.isLoggedIn">
-      <!-- Sidebar actions -->
+      <!-- Actions -->
       <div class="space-y-3 mb-6">
         <button
           @click="onNewChat"
@@ -99,18 +110,22 @@ function onDeleteSession(timestamp: string) {
         </button>
       </div>
 
-      <!-- Chat history section -->
-      <h2 class="mb-2 text-sm font-semibold text-slate-300 uppercase tracking-wide">Histórico</h2>
+      <!-- History list -->
+      <h2 class="mb-2 text-sm font-semibold text-slate-300 uppercase tracking-wide">
+        Histórico
+      </h2>
+
       <HistoryList
         :items="history.summaryItems"
         :activeTimestamp="history.activeSession?.timestamp"
         @select="onSelectSession"
         @delete="onDeleteSession"
+        @rename="onRenameSession"
       />
     </template>
 
+    <!-- Unauthenticated fallback ------------------------------------------ -->
     <template v-else>
-      <!-- Message for unauthenticated users -->
       <div class="text-sm text-slate-400 mt-8">
         Faça login para visualizar seu histórico.
       </div>

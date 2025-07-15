@@ -20,6 +20,15 @@ function onNewMessage(msg: { prompt: string; response: { text?: string; imgUrl?:
   history.appendMessage({ role: MessageRole.Assistant, content: msg.response.text || '' });
 }
 
+/**
+ * Handle rename request from the sidebar and forward to the store method.
+ * @param timestamp - The session timestamp
+ * @param newTitle - The new session label
+ */
+function onRenameSession(timestamp: string, newTitle: string) {
+  history.renameSession(timestamp, newTitle);
+}
+
 // Load existing history on initial mount
 onMounted(() => {
   if (!history.history.length) {
@@ -35,6 +44,7 @@ onMounted(() => {
       :open="sidebarOpen"
       :itens="history.history"
       @close="sidebarOpen = false"
+      @rename="onRenameSession"
     />
 
     <!-- Main layout -->

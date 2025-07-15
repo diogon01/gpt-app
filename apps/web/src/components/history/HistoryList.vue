@@ -1,15 +1,34 @@
 <script setup lang="ts">
 import HistoryListItem from './HistoryListItem.vue';
 
-defineProps<{
+/**
+ * Props received by the HistoryList component
+ * @property {Array} items - List of user sessions (history)
+ * @property {string} [activeTimestamp] - The active session timestamp
+ */
+const props = defineProps<{
   items: { prompt: string; createdAt: string }[];
   activeTimestamp?: string;
 }>();
 
+/**
+ * Emits events to parent
+ * @event select - A session was selected
+ * @event delete - A session was deleted
+ * @event rename - A session was renamed
+ */
 const emit = defineEmits<{
   select: [timestamp: string];
   delete: [timestamp: string];
+  rename: [timestamp: string, newTitle: string];
 }>();
+
+/**
+ * Handles rename event from a list item
+ */
+function handleRename(timestamp: string, newTitle: string) {
+  emit('rename', timestamp, newTitle);
+}
 </script>
 
 <template>
@@ -18,13 +37,14 @@ const emit = defineEmits<{
            scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800"
   >
     <HistoryListItem
-      v-for="i in items"
+      v-for="i in props.items"
       :key="i.createdAt"
       :label="i.prompt"
       :timestamp="i.createdAt"
-      :active="activeTimestamp === i.createdAt"
+      :active="props.activeTimestamp === i.createdAt"
       @select="emit('select', $event)"
       @delete="emit('delete', $event)"
+      @rename="handleRename"
     />
   </ul>
 </template>

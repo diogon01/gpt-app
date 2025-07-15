@@ -8,21 +8,12 @@ import type {
     UserMessageEntity,
 } from '@42robotics/domain';
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
-/** Local alias for a single session (timestamp + messages) */
+/**
+ * Local alias for a single session (timestamp + messages)
+ */
 type UserHistoryEntry = UserHistoryEntryEntity;
 
-/* -------------------------------------------------------------------------- */
-/* Pinia store                                                                */
-/* -------------------------------------------------------------------------- */
-
 export const useHistoryStore = defineStore('history', {
-    /* ------------------------------------------------------------------------ */
-    /* State                                                                    */
-    /* ------------------------------------------------------------------------ */
     state: () => ({
         /** Full list of sessions returned from the backend */
         history: [] as UserHistoryEntry[],
@@ -34,14 +25,10 @@ export const useHistoryStore = defineStore('history', {
         activeSession: null as UserHistoryEntry | null,
     }),
 
-    /* ------------------------------------------------------------------------ */
-    /* Getters                                                                  */
-    /* ------------------------------------------------------------------------ */
     getters: {
         /**
-         * Sidebar-friendly summary list (first user prompt + ISO timestamp)
-         * @param state - Pinia reactive state
-         * @returns Array consumed by `HistoryList.vue`
+         * Returns summarized data for the sidebar list
+         * @returns Array of prompt and timestamp
          */
         summaryItems(state): { prompt: string; createdAt: string }[] {
             return state.history.map((entry) => {
@@ -54,24 +41,15 @@ export const useHistoryStore = defineStore('history', {
         },
     },
 
-    /* ------------------------------------------------------------------------ */
-    /* Actions                                                                  */
-    /* ------------------------------------------------------------------------ */
     actions: {
-        /* ---------------------------------------------------------------------- */
-        /* Remote calls                                                            */
-        /* ---------------------------------------------------------------------- */
-
         /**
          * Fetches all chat sessions for the logged-in user
-         * and hydrates local state.
          */
         async fetch() {
             this.loading = true;
             try {
                 const authStore = useAuth();
-                if (!authStore.firebaseUser)
-                    throw new Error('User not authenticated');
+                if (!authStore.firebaseUser) throw new Error('User not authenticated');
 
                 const token = await authStore.firebaseUser.getIdToken();
                 const res = await fetch('/api/history', {
@@ -85,7 +63,6 @@ export const useHistoryStore = defineStore('history', {
 
                 const data: UserHistoryEntity = await res.json();
 
-                // Backend now returns `sessions` (renamed from `history`)
                 this.history = data.sessions.map((s) => ({
                     timestamp: new Date(s.timestamp),
                     messages: s.messages.map((m) => ({
@@ -103,36 +80,32 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
-         * Sends `PATCH /history/:sessionId` to rename a session
-         * and updates the local cache so the sidebar shows the new title.
+         * Renames a session via PATCH /history/:sessionId
+         * and updates local cache
          *
-         * @param timestampIso - Session identifier (ISO string from `createdAt`)
-         * @param newTitle     - New title provided by the user
+         * @param timestampIso ISO timestamp string of the session
+         * @param newTitle     New title to assign to the session
          */
         async renameSession(timestampIso: string, newTitle: string) {
             try {
                 const authStore = useAuth();
-                if (!authStore.firebaseUser)
-                    throw new Error('User not authenticated');
+                if (!authStore.firebaseUser) throw new Error('User not authenticated');
 
                 const token = await authStore.firebaseUser.getIdToken();
-                const res = await fetch(
-                    `/api/history/${encodeURIComponent(timestampIso)}`,
-                    {
-                        method: 'PATCH',
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ title: newTitle }),
+                const res = await fetch(`/api/history/${encodeURIComponent(timestampIso)}`, {
+                    method: 'PATCH',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
                     },
-                );
+                    body: JSON.stringify({ title: newTitle }),
+                });
 
                 if (!res.ok) throw new Error('Failed to rename session');
 
-                /* ---- Update local copy so UI reflects the new title instantly ---- */
+                // Update local cache
                 const session = this.history.find(
-                    (h) => h.timestamp.toISOString() === timestampIso,
+                    (h) => h.timestamp.toISOString() === timestampIso
                 );
 
                 if (session) {
@@ -144,12 +117,8 @@ export const useHistoryStore = defineStore('history', {
             }
         },
 
-        /* ---------------------------------------------------------------------- */
-        /* Local-only helpers                                                      */
-        /* ---------------------------------------------------------------------- */
-
         /**
-         * Sets the active chat session given its ISO timestamp.
+         * Sets the active session based on ISO timestamp
          */
         setActiveSessionByTimestamp(tsIso: string) {
             this.activeSession =
@@ -157,8 +126,7 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
-         * Appends a message to the active session;
-         * if none exists, a new session is created automatically.
+         * Appends a message to the active session or creates a new session
          */
         appendMessage(message: Omit<UserMessageEntity, 'timestamp'>) {
             const msg: UserMessageEntity = {
@@ -179,7 +147,7 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
-         * Starts a brand-new empty session (or with an initial user message).
+         * Creates a new session with optional initial message
          */
         startNewSession(initial?: Omit<UserMessageEntity, 'timestamp'>) {
             const now = new Date();
