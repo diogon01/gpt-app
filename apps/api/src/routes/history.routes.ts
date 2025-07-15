@@ -5,6 +5,7 @@ import {
   deleteHistorySession,
   getUserHistory,
   renameHistorySession,
+  searchUserHistory,
 } from '../controllers/history.controller';
 
 const router = Router();
@@ -15,6 +16,13 @@ const router = Router();
  * @access Private
  */
 router.get('/', getUserHistory);
+
+/**
+ * @route GET /history/search
+ * @desc Searches history sessions by message content
+ * @access Private
+ */
+router.get('/search', searchUserHistory);
 
 /**
  * @route PATCH /history/:sessionId

@@ -1,89 +1,92 @@
 <script setup lang="ts">
-/* ===========================================================================
- * SearchModal – Full-screen overlay used to search through chat history
- * ---------------------------------------------------------------------------
- * Props
- *  - open (boolean): controls modal visibility (rendered only when true)
- *
- * Emits
- *  - close (): emitted when user clicks backdrop, close (X) button or selects
- *              a session – parent component deve zerar `open`.
- * ---------------------------------------------------------------------------
- * Author: 42 Robotics – Front-end team
- * ==========================================================================*/
-
-
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
+import { useAuth } from '../../stores/useAuthStore';
 import { useHistoryStore } from '../../stores/useHistoryStore';
 
-/** Controls modal visibility (passed by parent) */
+/**
+ * Props received by SearchModal
+ * @property {boolean} open - Controls modal visibility
+ */
 const props = defineProps<{ open: boolean }>();
 
-/** Emits close event to parent */
+/**
+ * Emits events to parent
+ * @event close - Fired when backdrop, X button, or a result is clicked
+ */
 const emit = defineEmits<{ close: [] }>();
 
 /* -------------------------------------------------------------------------- */
-/* State & Store                                                              */
+/* State                                                                      */
 /* -------------------------------------------------------------------------- */
+const query = ref('');                     // User-typed search term
+const results = ref<typeof store.history>([]);
+const loading = ref(false);
 
-const query = ref('');                      // User search query
-const store = useHistoryStore();            // Pinia history store reference
-
-/* -------------------------------------------------------------------------- */
-/* Computed                                                                   */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Filter sessions that contain the search term at least in one message.
- * Case-insensitive matching on `content`.
- */
-const filteredSessions = computed(() =>
-  query.value.trim()
-    ? store.history.filter(session =>
-        session.messages.some(msg =>
-          msg.content.toLowerCase().includes(query.value.toLowerCase())
-        )
-      )
-    : []
-);
+const store = useHistoryStore();
 
 /* -------------------------------------------------------------------------- */
-/* Watchers                                                                   */
+/* Debounced watcher that hits /api/history/search                            */
 /* -------------------------------------------------------------------------- */
+let timeout: ReturnType<typeof setTimeout>;
 
-// Example placeholder: add debounce / analytics hooks here if needed
-watch(() => query.value, () => {
-  /* Optional side-effects while typing */
+watch(query, async (newQuery) => {
+  clearTimeout(timeout);
+
+  // Require at least 2 chars before querying
+  if (newQuery.trim().length < 2) {
+    results.value = [];
+    return;
+  }
+
+  loading.value = true;
+
+  timeout = setTimeout(async () => {
+    try {
+      const auth = useAuth();
+      const token = await auth.firebaseUser?.getIdToken();
+
+      const res = await fetch(
+        `/api/history/search?q=${encodeURIComponent(newQuery)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (!res.ok) throw new Error('Failed to fetch search results');
+
+      const data = await res.json();
+      results.value = data.matches.map((s: any) => ({
+        _id: s._id,
+        timestamp: new Date(s.timestamp),
+        messages: s.messages.map((m: any) => ({
+          ...m,
+          timestamp: new Date(m.timestamp),
+        })),
+      }));
+    } catch (err) {
+      console.error('Search error:', err);
+      results.value = [];
+    } finally {
+      loading.value = false;
+    }
+  }, 300); // 300 ms debounce
 });
 </script>
 
 <template>
-  <!-- Teleport guarantees the modal is appended to <body>, not inside Sidebar -->
+  <!-- Teleport ensures modal renders at <body> root -->
   <Teleport to="body">
-    <!-- Render only when `open === true` -->
     <div
       v-if="props.open"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
       @click.self="emit('close')"
     >
-      <!-- Modal card -->
-      <div
-        class="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded shadow-lg p-6"
-      >
+      <div class="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded shadow-lg p-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-white">
-            Search Chats
-          </h2>
-          <button
-            @click="emit('close')"
-            class="text-slate-400 hover:text-white transition"
-          >
-            ✖
-          </button>
+          <h2 class="text-lg font-semibold text-white">Search Chats</h2>
+          <button @click="emit('close')" class="text-slate-400 hover:text-white transition">✖</button>
         </div>
 
-        <!-- Search input -->
+        <!-- Search field -->
         <input
           v-model="query"
           type="text"
@@ -91,31 +94,24 @@ watch(() => query.value, () => {
           class="w-full p-2 mb-4 text-white bg-slate-800 border border-slate-600 rounded"
         />
 
-        <!-- Results -->
-        <div
-          v-if="filteredSessions.length === 0"
-          class="text-slate-400"
-        >
+        <!-- Feedback / results -->
+        <div v-if="loading" class="text-slate-400">Searching...</div>
+        <div v-else-if="results.length === 0 && query.length >= 2" class="text-slate-400">
           No results found.
         </div>
 
-        <ul
-          v-else
-          class="max-h-96 overflow-y-auto space-y-1"
-        >
+        <ul v-else class="max-h-96 overflow-y-auto space-y-1">
           <li
-            v-for="session in filteredSessions"
+            v-for="session in results"
             :key="session._id"
             class="p-2 hover:bg-slate-700 rounded cursor-pointer"
             @click="() => { store.activeSession = session; emit('close'); }"
           >
-            <!-- First user message or fallback -->
+            <!-- Preview -->
             <div class="text-slate-200 font-medium truncate">
               {{ session.messages.find(m => m.role === 'user')?.content ?? 'Untitled session' }}
             </div>
-            <div class="text-xs text-slate-500">
-              {{ session.timestamp.toLocaleString() }}
-            </div>
+            <div class="text-xs text-slate-500">{{ session.timestamp.toLocaleString() }}</div>
           </li>
         </ul>
       </div>
