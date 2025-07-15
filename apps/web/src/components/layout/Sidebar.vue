@@ -1,5 +1,6 @@
-<!-- apps/web/src/components/Sidebar.vue -->
+<!-- apps/web/src/components/layout/Sidebar.vue -->
 <script setup lang="ts">
+import HistoryList from '@/components/history/HistoryList.vue';
 import { useAuth } from '../../stores/useAuthStore';
 import { useHistoryStore } from '../../stores/useHistoryStore';
 
@@ -18,11 +19,16 @@ function onNewChat() {
   history.startNewSession();
   emit('close');
 }
+
+function onDeleteSession(timestamp: string) {
+  // Por enquanto apenas loga — substitua por lógica real se desejar
+  console.log('Excluir sessão:', timestamp);
+}
 </script>
 
 <template>
   <aside
-    :class="[ 
+    :class="[
       'fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-700 p-4',
       'transition-transform duration-300 z-40',
       open ? 'translate-x-0' : '-translate-x-full',
@@ -67,17 +73,12 @@ function onNewChat() {
 
       <!-- Histórico -->
       <h2 class="mb-2 text-sm font-semibold text-slate-300 uppercase tracking-wide">Histórico</h2>
-      <ul class="space-y-2 overflow-y-auto pr-1 max-h-[calc(100vh-15rem)] scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
-        <li
-          v-for="item in history.summaryItems"
-          :key="item.createdAt"
-          @click="onSelectSession(item.createdAt)"
-          class="cursor-pointer px-2 py-1 rounded text-sm truncate hover:bg-slate-700 transition"
-          :class="{ 'bg-slate-700 text-cyan-300 font-semibold': history.activeSession?.timestamp === item.createdAt, 'text-slate-300': history.activeSession?.timestamp !== item.createdAt }"
-        >
-          {{ item.prompt }}
-        </li>
-      </ul>
+      <HistoryList
+        :items="history.summaryItems"
+        :activeTimestamp="history.activeSession?.timestamp"
+        @select="onSelectSession"
+        @delete="onDeleteSession"
+      />
     </template>
 
     <template v-else>
@@ -87,4 +88,3 @@ function onNewChat() {
     </template>
   </aside>
 </template>
-
