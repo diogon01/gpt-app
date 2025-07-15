@@ -1,4 +1,5 @@
-import { UserHistoryEntryResponseDTO } from "../user-history-entry-response.dto";
+import { UserHistoryEntryResponseDTO } from "./user-history-entry-response.dto";
+
 
 
 /**

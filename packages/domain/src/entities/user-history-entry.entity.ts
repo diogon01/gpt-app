@@ -6,6 +6,7 @@ import { UserMessageEntity } from './user-message.entity';
  * a single session, depending on how you chunk history.
  */
 export interface UserHistoryEntryEntity {
-  timestamp: Date;               // when this turn started
+  _id: string;                   // MongoDB ObjectId as string
+  timestamp: Date;              // when this turn started
   messages: UserMessageEntity[]; // ordered (user first, assistant second)
 }

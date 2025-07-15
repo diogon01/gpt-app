@@ -27,6 +27,7 @@ export class HistoryService {
       .toArray();
 
     return results.map((entry) => ({
+      _id: entry._id.toString(),
       timestamp: entry.createdAt,
       messages: [
         {
@@ -45,6 +46,7 @@ export class HistoryService {
       ],
     }));
   }
+
 
   /**
    * Saves a prompt and its response to the history collection

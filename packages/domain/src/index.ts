@@ -8,8 +8,8 @@ export * from './entities/user-message.entity';
 
 // DTOs de Resposta
 export * from './dtos/create-user.dto';
+export * from './dtos/response/user-history-entry-response.dto';
 export * from './dtos/response/user-history-response.dto';
-export * from './dtos/user-history-entry-response.dto';
 export * from './dtos/user-message-response.dto';
 export * from './dtos/verify-assertion.dto';
 

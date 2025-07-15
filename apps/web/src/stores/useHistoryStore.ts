@@ -9,9 +9,9 @@ import type {
 } from '@42robotics/domain';
 
 /**
- * Local alias for a single session (timestamp + messages)
+ * Represents a full user session, including backend-assigned _id.
  */
-type UserHistoryEntry = UserHistoryEntryEntity;
+type UserHistoryEntry = UserHistoryEntryEntity & { _id: string };
 
 export const useHistoryStore = defineStore('history', {
     state: () => ({
@@ -27,13 +27,14 @@ export const useHistoryStore = defineStore('history', {
 
     getters: {
         /**
-         * Returns summarized data for the sidebar list
-         * @returns Array of prompt and timestamp
+         * Returns summarized session data for rendering in sidebar
+         * @returns List of session summaries with _id, prompt preview, and creation timestamp
          */
-        summaryItems(state): { prompt: string; createdAt: string }[] {
+        summaryItems(state): { _id: string; prompt: string; createdAt: string }[] {
             return state.history.map((entry) => {
                 const userMsg = entry.messages.find((m) => m.role === 'user');
                 return {
+                    _id: entry._id,
                     prompt: userMsg?.content ?? '(no prompt)',
                     createdAt: entry.timestamp.toISOString(),
                 };
@@ -43,7 +44,8 @@ export const useHistoryStore = defineStore('history', {
 
     actions: {
         /**
-         * Fetches all chat sessions for the logged-in user
+         * Fetches all chat sessions associated with the authenticated user.
+         * Populates the history state and selects the most recent session.
          */
         async fetch() {
             this.loading = true;
@@ -64,6 +66,7 @@ export const useHistoryStore = defineStore('history', {
                 const data: UserHistoryEntity = await res.json();
 
                 this.history = data.sessions.map((s) => ({
+                    _id: s._id,
                     timestamp: new Date(s.timestamp),
                     messages: s.messages.map((m) => ({
                         ...m,
@@ -80,19 +83,19 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
-         * Renames a session via PATCH /history/:sessionId
-         * and updates local cache
-         *
-         * @param timestampIso ISO timestamp string of the session
-         * @param newTitle     New title to assign to the session
+         * Renames a specific session by sending a PATCH request to the API.
+         * Also updates the session title locally in the store.
+         * 
+         * @param sessionId - MongoDB ObjectId of the session to rename
+         * @param newTitle - New title to assign to the first user message
          */
-        async renameSession(timestampIso: string, newTitle: string) {
+        async renameSession(sessionId: string, newTitle: string) {
             try {
                 const authStore = useAuth();
                 if (!authStore.firebaseUser) throw new Error('User not authenticated');
 
                 const token = await authStore.firebaseUser.getIdToken();
-                const res = await fetch(`/api/history/${encodeURIComponent(timestampIso)}`, {
+                const res = await fetch(`/api/history/${encodeURIComponent(sessionId)}`, {
                     method: 'PATCH',
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -103,11 +106,8 @@ export const useHistoryStore = defineStore('history', {
 
                 if (!res.ok) throw new Error('Failed to rename session');
 
-                // Update local cache
-                const session = this.history.find(
-                    (h) => h.timestamp.toISOString() === timestampIso
-                );
-
+                // Update local session title
+                const session = this.history.find((h) => h._id === sessionId);
                 if (session) {
                     const userMsg = session.messages.find((m) => m.role === 'user');
                     if (userMsg) userMsg.content = newTitle;
@@ -118,7 +118,10 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
-         * Sets the active session based on ISO timestamp
+         * Activates a session by matching the provided ISO timestamp.
+         * This is useful for selecting a session after initial fetch.
+         * 
+         * @param tsIso - ISO timestamp string
          */
         setActiveSessionByTimestamp(tsIso: string) {
             this.activeSession =
@@ -126,7 +129,10 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
-         * Appends a message to the active session or creates a new session
+         * Appends a new message to the currently active session.
+         * If no session is active, a new one is created.
+         * 
+         * @param message - User or assistant message to append
          */
         appendMessage(message: Omit<UserMessageEntity, 'timestamp'>) {
             const msg: UserMessageEntity = {
@@ -136,6 +142,7 @@ export const useHistoryStore = defineStore('history', {
 
             if (!this.activeSession) {
                 const newSession: UserHistoryEntry = {
+                    _id: crypto.randomUUID(),
                     timestamp: msg.timestamp,
                     messages: [msg],
                 };
@@ -147,11 +154,15 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
-         * Creates a new session with optional initial message
+         * Starts a new session, optionally with an initial message.
+         * Sets the newly created session as the active one.
+         * 
+         * @param initial - Optional initial message to include in the session
          */
         startNewSession(initial?: Omit<UserMessageEntity, 'timestamp'>) {
             const now = new Date();
             const newSession: UserHistoryEntry = {
+                _id: crypto.randomUUID(),
                 timestamp: now,
                 messages: initial ? [{ ...initial, timestamp: now }] : [],
             };

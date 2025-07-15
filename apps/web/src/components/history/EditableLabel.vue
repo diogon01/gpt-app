@@ -1,70 +1,50 @@
 <script setup lang="ts">
 import { defineExpose, nextTick, ref } from 'vue';
 
-/**
- * Props for EditableLabel
- * @property {string} text - Initial label text
- * @property {string} timestamp - Identifier used for input targeting
- * @property {boolean} active - Whether the item is active
- */
 const props = defineProps<{
   text: string;
-  timestamp: string;
+  sessionId: string;
   active: boolean;
 }>();
 
-/**
- * Emits rename event
- * @event rename - Emitted when the user confirms a new title
- */
 const emit = defineEmits<{
-  rename: [timestamp: string, newTitle: string];
+  rename: [sessionId: string, newTitle: string];
 }>();
 
 const editMode = ref(false);
 const editText = ref('');
 const renameConfirmed = ref(false);
 
-/**
- * Begin editing the label
- */
 function startEdit() {
   editText.value = props.text;
   editMode.value = true;
   renameConfirmed.value = false;
 
   nextTick(() => {
-    const input = document.getElementById(`edit-${props.timestamp}`) as HTMLInputElement;
+    const input = document.getElementById(`edit-${props.sessionId}`) as HTMLInputElement;
     input?.focus();
     input?.select();
   });
 }
 
-/**
- * On ENTER key: confirm and trigger blur
- */
 function onEnter(e: KeyboardEvent) {
   e.preventDefault();
   renameConfirmed.value = true;
   (e.target as HTMLInputElement).blur();
 }
 
-/**
- * On blur: finalize rename if confirmed
- */
 async function onBlur() {
   await nextTick();
   const newTitle = editText.value.trim();
   editMode.value = false;
 
   if (renameConfirmed.value && newTitle && newTitle !== props.text) {
-    emit('rename', props.timestamp, newTitle);
+    emit('rename', props.sessionId, newTitle);
   }
 
   renameConfirmed.value = false;
 }
 
-// Expose editing control to parent
 defineExpose({ startEdit });
 </script>
 
@@ -75,7 +55,7 @@ defineExpose({ startEdit });
 
   <template v-else>
     <input
-      :id="`edit-${props.timestamp}`"
+      :id="`edit-${props.sessionId}`"
       v-model="editText"
       class="pr-2 w-full bg-slate-600 text-slate-100 rounded px-1 outline-none"
       @keydown.enter="onEnter"
