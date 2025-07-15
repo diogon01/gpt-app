@@ -117,6 +117,39 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
+         * Deletes a specific session by sending a DELETE request to the API.
+         * Also removes the session from the local store.
+         *
+         * @param _id - MongoDB ObjectId of the session to delete
+         */
+        async deleteSession(_id: string) {
+            try {
+                const authStore = useAuth();
+                if (!authStore.firebaseUser) throw new Error('User not authenticated');
+
+                const token = await authStore.firebaseUser.getIdToken();
+                const res = await fetch(`/api/history/${encodeURIComponent(_id)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!res.ok) throw new Error('Failed to delete session');
+
+                // Remove session locally
+                this.history = this.history.filter((session) => session._id !== _id);
+
+                // Reset active session if it was the one deleted
+                if (this.activeSession?._id === _id) {
+                    this.activeSession = this.history[0] ?? null;
+                }
+            } catch (err) {
+                console.error('Error deleting session:', err);
+            }
+        },
+
+        /**
          * Activates a session by matching the provided ISO timestamp.
          * Useful for restoring selected session after initial fetch.
          *

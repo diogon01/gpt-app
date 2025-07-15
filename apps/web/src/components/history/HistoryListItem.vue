@@ -136,7 +136,7 @@ function triggerRename() {
 
         <button
           class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-slate-700"
-          @click.stop="emit('delete', props.timestamp); menuOpen = false"
+          @click.stop="emit('delete', props._id); menuOpen = false"
         >
           <Icon name="delete" /> Delete
         </button>
