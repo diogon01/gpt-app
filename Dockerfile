@@ -30,4 +30,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /workspace .
 
 EXPOSE 80
-CMD ["sh", "-c", "node api/server.js & nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "node apps/api/dist/apps/api/src/server.js & nginx -g 'daemon off;'"]
