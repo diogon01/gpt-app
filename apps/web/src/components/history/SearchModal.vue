@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuth } from '../../stores/useAuthStore';
 import { useHistoryStore } from '../../stores/useHistoryStore';
 
@@ -18,11 +19,12 @@ const emit = defineEmits<{ close: [] }>();
 /* -------------------------------------------------------------------------- */
 /* State                                                                      */
 /* -------------------------------------------------------------------------- */
-const query = ref('');                     // User-typed search term
+const query = ref(''); // User-typed search term
 const results = ref<typeof store.history>([]);
 const loading = ref(false);
 
 const store = useHistoryStore();
+const router = useRouter();
 
 /* -------------------------------------------------------------------------- */
 /* Debounced watcher that hits /api/history/search                            */
@@ -32,7 +34,6 @@ let timeout: ReturnType<typeof setTimeout>;
 watch(query, async (newQuery) => {
   clearTimeout(timeout);
 
-  // Require at least 2 chars before querying
   if (newQuery.trim().length < 2) {
     results.value = [];
     return;
@@ -67,12 +68,22 @@ watch(query, async (newQuery) => {
     } finally {
       loading.value = false;
     }
-  }, 300); // 300 ms debounce
+  }, 300);
 });
+
+/**
+ * Handles click on a search result, sets active session and redirects to history route
+ * @param {_id: string} sessionId - The session _id to load and navigate to
+ */
+function handleSelectSession(session: any) {
+  store.activeSession = session;
+  emit('close');
+  router.push({ name: 'HistorySession', params: { _id: session._id } });
+}
 </script>
 
+
 <template>
-  <!-- Teleport ensures modal renders at <body> root -->
   <Teleport to="body">
     <div
       v-if="props.open"
@@ -105,9 +116,8 @@ watch(query, async (newQuery) => {
             v-for="session in results"
             :key="session._id"
             class="p-2 hover:bg-slate-700 rounded cursor-pointer"
-            @click="() => { store.activeSession = session; emit('close'); }"
+            @click="handleSelectSession(session)"
           >
-            <!-- Preview -->
             <div class="text-slate-200 font-medium truncate">
               {{ session.messages.find(m => m.role === 'user')?.content ?? 'Untitled session' }}
             </div>
@@ -118,3 +128,4 @@ watch(query, async (newQuery) => {
     </div>
   </Teleport>
 </template>
+
