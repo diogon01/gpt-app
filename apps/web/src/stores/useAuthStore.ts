@@ -1,8 +1,6 @@
 // apps/web/src/stores/useAuthStore.ts
-import {
-    getApps,
-    initializeApp,
-} from 'firebase/app';
+
+import { getApps, initializeApp } from 'firebase/app';
 import type { User as FirebaseUser } from 'firebase/auth';
 import {
     getAuth,
@@ -12,11 +10,6 @@ import {
     signInWithPopup,
     signOut,
 } from 'firebase/auth';
-import {
-    doc,
-    getDoc,
-    getFirestore,
-} from 'firebase/firestore';
 import { defineStore } from 'pinia';
 
 /* -------------------------------------------------------------------------- */
@@ -31,7 +24,6 @@ const firebaseConfig = {
 
 if (!getApps().length) initializeApp(firebaseConfig);
 const auth = getAuth();
-const db = getFirestore();
 
 /* -------------------------------------------------------------------------- */
 /* Application-level user type                                                */
@@ -42,7 +34,6 @@ export interface MyUser {
     email: string;
     photoURL?: string;
     provider: 'google' | 'microsoft';
-    isPlus: boolean;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -56,47 +47,47 @@ export const useAuth = defineStore('auth', {
     }),
 
     getters: {
+        /**
+         * Indicates whether the user is currently logged in.
+         * @returns True if authenticated
+         */
         isLoggedIn: (state) => !!state.user,
     },
 
     actions: {
         /**
-         * Maps a Firebase user to the custom app user structure
-         */
-        async mapUser(fb: FirebaseUser, provider: MyUser['provider']): Promise<MyUser> {
-            const isPlus = await this.checkIfUserIsPlus(fb.uid);
-
-            return {
-                uid: fb.uid,
-                displayName: fb.displayName ?? 'Anonymous',
-                email: fb.email ?? 'no-email@unknown',
-                photoURL: fb.photoURL ?? undefined,
-                provider,
-                isPlus,
-            };
-        },
-
-        /**
-         * Google sign-in
+         * Signs in using Google provider and stores user data.
          */
         async loginGoogle() {
             const cred = await signInWithPopup(auth, new GoogleAuthProvider());
             this.firebaseUser = cred.user;
-            this.user = await this.mapUser(cred.user, 'google');
+            this.user = {
+                uid: cred.user.uid,
+                displayName: cred.user.displayName ?? 'Anonymous',
+                email: cred.user.email ?? 'no-email@unknown',
+                photoURL: cred.user.photoURL ?? undefined,
+                provider: 'google',
+            };
         },
 
         /**
-         * Microsoft sign-in
+         * Signs in using Microsoft provider and stores user data.
          */
         async loginMicrosoft() {
             const provider = new OAuthProvider('microsoft.com');
             const cred = await signInWithPopup(auth, provider);
             this.firebaseUser = cred.user;
-            this.user = await this.mapUser(cred.user, 'microsoft');
+            this.user = {
+                uid: cred.user.uid,
+                displayName: cred.user.displayName ?? 'Anonymous',
+                email: cred.user.email ?? 'no-email@unknown',
+                photoURL: cred.user.photoURL ?? undefined,
+                provider: 'microsoft',
+            };
         },
 
         /**
-         * Logout and clear auth state
+         * Signs out the current user and clears store state.
          */
         async logout() {
             await signOut(auth);
@@ -105,7 +96,8 @@ export const useAuth = defineStore('auth', {
         },
 
         /**
-         * Initializes Firebase auth listener and waits for session restoration
+         * Initializes Firebase auth listener and restores user session if available.
+         * @returns Promise resolving after initialization completes
          */
         async init(): Promise<void> {
             return new Promise((resolve) => {
@@ -115,7 +107,7 @@ export const useAuth = defineStore('auth', {
                     if (!fbUser) {
                         this.user = null;
                         this.firebaseUser = null;
-                        return resolve(); // resolve with null user
+                        return resolve();
                     }
 
                     const providerId = fbUser.providerData[0]?.providerId.includes('google')
@@ -123,24 +115,17 @@ export const useAuth = defineStore('auth', {
                         : 'microsoft';
 
                     this.firebaseUser = fbUser;
-                    this.user = await this.mapUser(fbUser, providerId as MyUser['provider']);
-                    resolve(); // resolve after mapping
+                    this.user = {
+                        uid: fbUser.uid,
+                        displayName: fbUser.displayName ?? 'Anonymous',
+                        email: fbUser.email ?? 'no-email@unknown',
+                        photoURL: fbUser.photoURL ?? undefined,
+                        provider: providerId as MyUser['provider'],
+                    };
+
+                    resolve();
                 });
             });
-        },
-
-        /**
-         * Checks if the user has a "plus" subscription plan in Firestore
-         */
-        async checkIfUserIsPlus(uid: string): Promise<boolean> {
-            try {
-                const docRef = doc(db, 'users', uid);
-                const snapshot = await getDoc(docRef);
-                return snapshot.exists() && snapshot.data()?.plan === 'plus';
-            } catch (error) {
-                console.warn('Failed to check Plus plan:', error);
-                return false;
-            }
         },
     },
 });

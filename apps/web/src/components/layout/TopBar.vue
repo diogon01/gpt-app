@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LoginModal from '@/components/LoginModal.vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useAuth } from '../../stores/useAuthStore';
 import { useUiStore } from '../../stores/useUiStore';

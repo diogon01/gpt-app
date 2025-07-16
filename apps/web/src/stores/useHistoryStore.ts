@@ -58,7 +58,8 @@ export const useHistoryStore = defineStore('history', {
             this.loading = true;
             try {
                 const authStore = useAuth();
-                if (!authStore.firebaseUser) throw new Error('User not authenticated');
+
+                if (!authStore.firebaseUser) return;
 
                 const token = await authStore.firebaseUser.getIdToken();
                 const res = await fetch('/api/history', {

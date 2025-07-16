@@ -1,36 +1,41 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useAuth } from '../stores/useAuthStore';
+import { useHistoryStore } from '../stores/useHistoryStore';
 
 const auth = useAuth();
-const router = useRouter();
+const history = useHistoryStore();
+const emit = defineEmits<{ close: [] }>();
 
-// se já estiver logado, redireciona
-onMounted(() => {
-  if (auth.user) router.replace('/');
-});
 
+/**
+ * Handles login with Google provider and fetches chat history.
+ */
 async function loginGoogle() {
   try {
     await auth.loginGoogle();
-    router.replace('/');          // pós-login
+    await history.fetch();
+    emit('close');
   } catch (err) {
-    console.error(err);
-    alert('Falha no login Google');
+    console.error('Google login failed:', err);
+    alert('Google login failed');
   }
 }
 
+/**
+ * Handles login with Microsoft provider and fetches chat history.
+ */
 async function loginMicrosoft() {
   try {
     await auth.loginMicrosoft();
-    router.replace('/');
+    await history.fetch();
+    emit('close');
   } catch (err) {
-    console.error(err);
-    alert('Falha no login Microsoft');
+    console.error('Microsoft login failed:', err);
+    alert('Microsoft login failed');
   }
 }
 </script>
+
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100">
