@@ -1,7 +1,7 @@
 // Entidades
 export * from './entities/auth-tokens';
 export * from './entities/mongo-user';
-export * from './entities/user';
+export * from './entities/User';
 export * from './entities/user-history-entry.entity';
 export * from './entities/user-history.entity';
 export * from './entities/user-message.entity';

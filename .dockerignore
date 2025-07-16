@@ -1,0 +1,27 @@
+# Ignora dependências locais
+node_modules
+**/node_modules
+
+# Ignora dist e builds anteriores
+dist
+**/dist
+
+# Ignora configurações do sistema/IDE
+.vscode
+.idea
+
+
+
+# Ignora cache e logs
+npm-debug.log
+pnpm-debug.log
+yarn-error.log
+.pnpm-store
+.cache
+coverage
+output
+
+# Ignora testes locais e arquivos diversos
+*.test.*
+*.spec.*
+.DS_Store

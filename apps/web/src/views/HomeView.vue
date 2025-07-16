@@ -7,6 +7,7 @@ import PromptForm from '@/components/chat/PromptForm.vue';
 import Sidebar from '@/components/layout/Sidebar.vue';
 import TopBar from '@/components/layout/TopBar.vue';
 
+
 import { MessageRole } from '@42robotics/domain';
 import { useHistoryStore } from '../stores/useHistoryStore';
 

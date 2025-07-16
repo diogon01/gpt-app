@@ -2,7 +2,7 @@
 
 import { VerifyAssertionDTO } from "../dtos/verify-assertion.dto";
 import { AuthTokens } from "../entities/auth-tokens";
-import { UserProps } from "../entities/user";
+import { UserProps } from "../entities/User";
 
 export function mapVerifyAssertion(
     r: VerifyAssertionDTO

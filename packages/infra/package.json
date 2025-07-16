@@ -2,11 +2,12 @@
     "name": "@42robotics/infra",
     "version": "1.0.0",
     "description": "Shared infrastructure layer for the 42Robotics application",
-    "main": "src/index.ts",
-    "types": "src/index.ts",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "scripts": {
+        "clean": "rimraf dist",
         "build": "tsc --build",
-        "clean": "rimraf dist"
+        "prebuild": "pnpm clean"
     },
     "keywords": [
         "infra",
