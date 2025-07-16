@@ -17,30 +17,38 @@ const history = useHistoryStore();
 const sidebarOpen = ref(false);
 
 /**
- * Handles new message event emitted by the PromptForm.
- * Appends both user and assistant messages to the current session.
+ * Handles new message emitted by PromptForm.
+ * Starts a new session if none exists and appends both messages.
  *
- * @param msg - Contains the user prompt and assistant response
+ * @param msg - Object containing user prompt and assistant response
  */
-function onNewMessage(msg: { prompt: string; response: { text?: string; imgUrl?: string } }) {
+async function onNewMessage(msg: { prompt: string; response: { text?: string; imgUrl?: string } }) {
+  if (!history.activeSession) {
+    history.startNewSession({ role: MessageRole.User, content: msg.prompt });
+
+    if (history.activeSessionId) {
+      router.push({ name: 'HistorySession', params: { _id: history.activeSessionId } });
+    }
+  }
+
   history.appendMessage({ role: MessageRole.User, content: msg.prompt });
   history.appendMessage({ role: MessageRole.Assistant, content: msg.response.text || '' });
 }
 
 /**
- * Handles rename requests emitted by the sidebar.
+ * Handles rename requests emitted by Sidebar.
  *
- * @param _id - Session _id used for matching
- * @param newTitle - New title to apply to the session
+ * @param _id - Session ID to rename
+ * @param newTitle - New title to assign to session
  */
 function onRenameSession(_id: string, newTitle: string) {
   history.renameSession(_id, newTitle);
 }
 
 /**
- * Handles navigation when user selects a session from sidebar.
+ * Handles session selection from Sidebar.
  *
- * @param sessionId - MongoDB _id of the session
+ * @param sessionId - Selected session ID to activate
  */
 function onSelectSession(sessionId: string) {
   router.push({ name: 'HistorySession', params: { _id: sessionId } });
@@ -48,9 +56,9 @@ function onSelectSession(sessionId: string) {
 }
 
 /**
- * Initializes session:
- * - If sessionId exists in route, fetch that session.
- * - If route is root ("/"), ensure history is loaded and create a new session.
+ * Initializes session based on route:
+ * - Fetches specific session if ID is present
+ * - Loads all history if on root ("/") route
  */
 async function initializeSession() {
   const sessionId = route.params._id as string | undefined;
@@ -61,19 +69,14 @@ async function initializeSession() {
     if (!history.history.length) {
       await history.fetch();
     }
-
-    // Starts a new session to ensure PromptForm saves to it
-    history.startNewSession();
+    history.activeSession = null;
   }
 }
 
-
-// Load session or reset on mount
 onMounted(() => {
   initializeSession();
 });
 
-// React to route param changes (e.g., session switch or "/")
 watch(() => route.params._id, () => {
   initializeSession();
 });
@@ -81,7 +84,7 @@ watch(() => route.params._id, () => {
 
 <template>
   <div class="flex h-screen bg-slate-950 text-slate-100">
-    <!-- Sidebar for mobile -->
+    <!-- Sidebar (mobile) -->
     <Sidebar
       :open="sidebarOpen"
       :itens="history.history"
@@ -95,7 +98,6 @@ watch(() => route.params._id, () => {
       <TopBar @menu="sidebarOpen = true" />
 
       <div class="flex-1 overflow-y-auto px-2 py-4 lg:px-4">
-        <!-- Displays the current session's messages -->
         <ChatArea :items="history.activeSession?.messages || []" />
       </div>
 

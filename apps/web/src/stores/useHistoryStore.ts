@@ -39,6 +39,14 @@ export const useHistoryStore = defineStore('history', {
                 };
             });
         },
+
+        /**
+    * Returns the _id of the currently active session, if available
+    * @returns Active session _id or null
+    */
+        activeSessionId(state): string | null {
+            return state.activeSession?._id ?? null;
+        },
     },
 
     actions: {

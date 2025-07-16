@@ -2,8 +2,13 @@
 import HistoryList from '@/components/history/HistoryList.vue';
 import SearchModal from '@/components/history/SearchModal.vue';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuth } from '../../stores/useAuthStore';
 import { useHistoryStore } from '../../stores/useHistoryStore';
+
+
+
+const router = useRouter();
 
 /**
  * Props
@@ -48,7 +53,7 @@ function onSelectSession(_id: string) {
  * Starts a new chat session and closes the sidebar
  */
 function onNewChat() {
-  history.startNewSession();
+  router.push('/'); // redireciona para a Home
   emit('close');
 }
 
