@@ -41,9 +41,9 @@ export const useHistoryStore = defineStore('history', {
         },
 
         /**
-    * Returns the _id of the currently active session, if available
-    * @returns Active session _id or null
-    */
+         * Returns the _id of the currently active session, if available
+         * @returns Active session _id or null
+         */
         activeSessionId(state): string | null {
             return state.activeSession?._id ?? null;
         },
@@ -212,7 +212,7 @@ export const useHistoryStore = defineStore('history', {
 
         /**
          * Appends a new message to the currently active session.
-         * If no session is active, a new one is created.
+         * Throws if no session is active.
          *
          * @param message - User or assistant message to append
          */
@@ -223,33 +223,61 @@ export const useHistoryStore = defineStore('history', {
             };
 
             if (!this.activeSession) {
-                const newSession: UserHistoryEntry = {
-                    _id: crypto.randomUUID(),
-                    timestamp: msg.timestamp,
-                    messages: [msg],
-                };
-                this.history.unshift(newSession);
-                this.activeSession = newSession;
-            } else {
-                this.activeSession.messages.push(msg);
+                console.warn('Attempted to append message without an active session');
+                return;
             }
+
+            this.activeSession.messages.push(msg);
         },
 
         /**
-         * Starts a new session, optionally with an initial message.
-         * Sets the newly created session as the active one.
+         * Starts a new session by calling the backend.
+         * Sets the newly created session as the active one and adds to history.
          *
-         * @param initial - Optional initial message to include in the session
+         * @param initial - Optional initial user message
+         * @returns The MongoDB ObjectId (_id) of the newly created session
          */
-        startNewSession(initial?: Omit<UserMessageEntity, 'timestamp'>) {
-            const now = new Date();
-            const newSession: UserHistoryEntry = {
-                _id: crypto.randomUUID(),
-                timestamp: now,
-                messages: initial ? [{ ...initial, timestamp: now }] : [],
-            };
-            this.history.unshift(newSession);
-            this.activeSession = newSession;
+        async startNewSession(initial?: Omit<UserMessageEntity, 'timestamp'>): Promise<string | null> {
+            this.loading = true;
+            try {
+                const authStore = useAuth();
+                if (!authStore.firebaseUser) throw new Error('User not authenticated');
+
+                const token = await authStore.firebaseUser.getIdToken();
+                const res = await fetch('/api/history', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        initialMessage: initial?.content ?? '',
+                    }),
+                });
+
+                if (!res.ok) throw new Error('Failed to start new session');
+
+                const data = await res.json();
+
+                const newSession: UserHistoryEntry = {
+                    _id: data._id,
+                    timestamp: new Date(data.timestamp),
+                    messages: data.messages.map((m: any) => ({
+                        ...m,
+                        timestamp: new Date(m.timestamp),
+                    })),
+                };
+
+                this.history.unshift(newSession);
+                this.activeSession = newSession;
+
+                return newSession._id;
+            } catch (err) {
+                console.error('Error starting new session:', err);
+                return null;
+            } finally {
+                this.loading = false;
+            }
         },
     },
 });

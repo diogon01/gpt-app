@@ -1,7 +1,6 @@
-// apps/api/src/routes/history.routes.ts
-
 import { Router } from 'express';
 import {
+  createUserHistorySession,
   deleteHistorySession,
   getUserHistory,
   getUserHistorySessionById,
@@ -17,6 +16,13 @@ const router = Router();
  * @access Private
  */
 router.get('/', getUserHistory);
+
+/**
+ * @route POST /history
+ * @desc Creates a new user session with optional initial message
+ * @access Private
+ */
+router.post('/', createUserHistorySession);
 
 /**
  * @route GET /history/search

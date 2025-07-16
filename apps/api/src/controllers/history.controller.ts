@@ -1,5 +1,3 @@
-// apps/api/src/controllers/history.controller.ts
-
 import { HistoryRenameRequestDTO } from '@42robotics/domain/src';
 import { HistorySearchResponseDTO } from '@42robotics/domain/src/dtos/response/history-search-response.dto';
 import { mapUserHistoryToDTO } from '@42robotics/domain/src/mappers/user-history.mapper';
@@ -33,6 +31,33 @@ export const getUserHistory: RequestHandler = async (req, res, next) => {
     });
 
     res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Creates a new history session for the authenticated user.
+ *
+ * @route POST /history
+ * @access Private
+ * @param req - Express request object with optional initial message
+ * @param res - Express response object with created session
+ * @param next - Express next middleware function for error handling
+ * @returns Sends a 201 response with the created session or 401 if unauthorized
+ */
+export const createUserHistorySession: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { initialMessage } = req.body;
+
+    const session = await HistoryService.createSession(req.user.id, initialMessage);
+
+    res.status(201).json(session);
   } catch (error) {
     next(error);
   }

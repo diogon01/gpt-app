@@ -46,6 +46,10 @@ export class HistoryService {
     userId: string,
     sessionId: string
   ): Promise<UserHistoryEntryResponseDTO> {
+    if (!ObjectId.isValid(sessionId)) {
+      throw new Error('INVALID_SESSION_ID');
+    }
+
     const db = await getMongoClient();
     const collection = db.collection(COLLECTION_NAME);
 
@@ -124,6 +128,49 @@ export class HistoryService {
   }
 
   /**
+   * Creates a new session in the database for the authenticated user.
+   *
+   * @param userId - Unique Firebase UID of the user
+   * @param initialMessage - Optional initial prompt from the user
+   * @returns The inserted session as a normalized UserHistoryEntryEntity
+   */
+  static async createSession(
+    userId: string,
+    initialMessage?: string
+  ): Promise<UserHistoryEntryEntity> {
+    const db = await getMongoClient();
+    const collection = db.collection(COLLECTION_NAME);
+
+    const createdAt = new Date();
+
+    const doc: any = {
+      userId,
+      createdAt,
+    };
+
+    if (initialMessage?.trim()) {
+      doc.prompt = initialMessage.trim();
+      doc.response = ''; // A resposta será preenchida posteriormente
+    }
+
+    const result = await collection.insertOne(doc);
+
+    return {
+      _id: result.insertedId.toString(),
+      timestamp: createdAt,
+      messages: initialMessage?.trim()
+        ? [
+          {
+            role: MessageRole.User,
+            content: initialMessage.trim(),
+            timestamp: createdAt,
+          },
+        ]
+        : [],
+    };
+  }
+
+  /**
    * Renames a session by updating its prompt/title.
    *
    * @param userId - Unique Firebase UID of the user
@@ -180,24 +227,31 @@ export class HistoryService {
    * @returns A normalized UserHistoryEntryEntity
    */
   private static mapEntryToSession(entry: any): UserHistoryEntryEntity {
+    const messages = [];
+
+    if (entry.prompt) {
+      messages.push({
+        role: MessageRole.User,
+        content: entry.prompt,
+        timestamp: entry.createdAt,
+      });
+    }
+
+    if (entry.response && entry.response !== '') {
+      messages.push({
+        role: MessageRole.Assistant,
+        content:
+          typeof entry.response === 'string'
+            ? entry.response
+            : JSON.stringify(entry.response),
+        timestamp: entry.createdAt,
+      });
+    }
+
     return {
       _id: entry._id.toString(),
       timestamp: entry.createdAt,
-      messages: [
-        {
-          role: MessageRole.User,
-          content: entry.prompt ?? '',
-          timestamp: entry.createdAt,
-        },
-        {
-          role: MessageRole.Assistant,
-          content:
-            typeof entry.response === 'string'
-              ? entry.response
-              : JSON.stringify(entry.response),
-          timestamp: entry.createdAt,
-        },
-      ],
+      messages,
     };
   }
 }

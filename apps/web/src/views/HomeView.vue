@@ -1,4 +1,3 @@
-<!-- apps/web/src/views/HomeView.vue -->
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -18,32 +17,37 @@ const sidebarOpen = ref(false);
 
 /**
  * Handles new message emitted by PromptForm.
- * Starts a new session if none exists and appends both messages appropriately.
- *
- * Avoids duplicate prompt message on first load by checking if a session was just created.
+ * Starts a new session via backend if none exists and appends messages.
  *
  * @param msg - Object containing user prompt and assistant response
  */
 async function onNewMessage(msg: { prompt: string; response: { text?: string; imgUrl?: string } }) {
   const isFirstMessage = !history.activeSession;
 
-  // Create a new session and add the first user message
   if (isFirstMessage) {
-    history.startNewSession({ role: MessageRole.User, content: msg.prompt });
+    // Create session in backend and wait for _id before navigating
+    const sessionId = await history.startNewSession({
+      role: MessageRole.User,
+      content: msg.prompt,
+    });
 
-    // Navigate to the new session route using the generated session ID
-    if (history.activeSessionId) {
-      router.push({ name: 'HistorySession', params: { _id: history.activeSessionId } });
+    if (sessionId) {
+      router.push({ name: 'HistorySession', params: { _id: sessionId } });
     }
   } else {
-    // Append user message only if not the first time (avoids duplication)
-    history.appendMessage({ role: MessageRole.User, content: msg.prompt });
+    // Append user message to existing session
+    history.appendMessage({
+      role: MessageRole.User,
+      content: msg.prompt,
+    });
   }
 
-  // Always append assistant's response
-  history.appendMessage({ role: MessageRole.Assistant, content: msg.response.text || '' });
+  // Append assistant response to the session
+  history.appendMessage({
+    role: MessageRole.Assistant,
+    content: msg.response.text ?? '',
+  });
 }
-
 
 /**
  * Handles rename requests emitted by Sidebar.
