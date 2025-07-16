@@ -10,6 +10,7 @@ export interface IAChoice {
 }
 
 export interface IAResponseDTO {
+  _id?: string;
   id: string;
   object: string;
   created: number;

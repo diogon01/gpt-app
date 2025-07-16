@@ -3,8 +3,9 @@
 import { IAResponseDTO } from '../dtos/ia-response.dto';
 import { MessageRole } from '../enums/message-role.enum';
 
-export function mapIAResponse(result: any): IAResponseDTO {
+export function mapIAResponse(result: any, mongoId?: string): IAResponseDTO {
   return {
+    _id: mongoId, // ← Inclui o _id no retorno, se fornecido
     id: result.id,
     object: result.object,
     created: result.created,

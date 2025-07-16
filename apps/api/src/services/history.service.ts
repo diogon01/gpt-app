@@ -108,17 +108,19 @@ export class HistoryService {
     prompt: string;
     type: string;
     response: any;
-  }): Promise<void> {
+  }): Promise<{ _id: string }> {
     const db = await getMongoClient();
     const collection = db.collection(COLLECTION_NAME);
 
-    await collection.insertOne({
+    const result = await collection.insertOne({
       userId,
       prompt,
       type,
       response,
       createdAt: new Date(),
     });
+
+    return { _id: result.insertedId.toString() };
   }
 
   /**

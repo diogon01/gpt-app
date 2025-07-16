@@ -38,17 +38,19 @@ export const handleIA: RequestHandler = async (req, res, next) => {
             return;
         }
 
+        let mongoId: string | undefined;
+
         if (req.user) {
-            console.log(`💾 [handleIA] Saving result to history for user: ${req.user.id}`);
-            await HistoryService.savePromptResult({
+            const { _id } = await HistoryService.savePromptResult({
                 userId: req.user.id,
                 prompt,
                 type: model,
                 response: result,
             });
+            mongoId = _id;
         }
 
-        const response: IAResponseDTO = mapIAResponse(result);
+        const response: IAResponseDTO = mapIAResponse(result, mongoId);
 
         console.log('📤 [handleIA] Sending response to client');
         res.json(response);
