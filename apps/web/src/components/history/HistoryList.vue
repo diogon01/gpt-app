@@ -14,13 +14,13 @@ const props = defineProps<{
 
 /**
  * Emits events to parent
- * @event select - A session was selected
+ * @event select - A session was selected (by _id)
  * @event delete - A session was deleted
  * @event rename - A session was renamed with new title
  */
 const emit = defineEmits<{
-  select: [timestamp: string];
-  delete: [timestamp: string];
+  select: [_id: string];
+  delete: [_id: string];
   rename: [_id: string, newTitle: string];
 }>();
 </script>
@@ -32,13 +32,13 @@ const emit = defineEmits<{
   >
     <HistoryListItem
       v-for="i in props.items"
-      :key="i.createdAt"
+      :key="i._id"
       :label="i.prompt"
       :timestamp="i.createdAt"
       :_id="i._id"
       :active="props.activeTimestamp === i.createdAt"
-      @select="emit('select', $event)"
-      @delete="emit('delete', $event)"
+      @select="emit('select', i._id)"
+      @delete="emit('delete', i._id)"
       @rename="(_id, newTitle) => emit('rename', _id, newTitle)"
     />
   </ul>

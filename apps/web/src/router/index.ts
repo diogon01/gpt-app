@@ -33,7 +33,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/LayoutTest.vue'),
     },
     {
-        path: '/:id',
+        path: '/history/:_id',
         name: 'HistorySession',
         component: () => import('@/views/HomeView.vue'),
         meta: { requiresAuth: true }, // Protected route: requires Firebase user authentication

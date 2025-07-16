@@ -1,17 +1,18 @@
+<!-- apps/web/src/views/HomeView.vue -->
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 import ChatArea from '@/components/chat/ChatArea.vue';
 import PromptForm from '@/components/chat/PromptForm.vue';
 import Sidebar from '@/components/layout/Sidebar.vue';
 import TopBar from '@/components/layout/TopBar.vue';
 
-
 import { MessageRole } from '@42robotics/domain';
 import { useHistoryStore } from '../stores/useHistoryStore';
 
 const route = useRoute();
+const router = useRouter();
 const history = useHistoryStore();
 const sidebarOpen = ref(false);
 
@@ -37,11 +38,21 @@ function onRenameSession(timestamp: string, newTitle: string) {
 }
 
 /**
+ * Handles navigation when user selects a session from sidebar
+ *
+ * @param sessionId - MongoDB _id of the session
+ */
+function onSelectSession(sessionId: string) {
+  router.push({ name: 'HistorySession', params: { _id: sessionId } });
+  sidebarOpen.value = false;
+}
+
+/**
  * Initializes session based on route param or falls back to full history.
  * This is executed on initial mount or when route param changes.
  */
 async function initializeSession() {
-  const sessionId = route.params.id as string | undefined;
+  const sessionId = route.params._id as string | undefined;
 
   if (sessionId) {
     await history.fetchById(sessionId);
@@ -56,7 +67,7 @@ onMounted(() => {
 });
 
 // React to route changes (e.g., when navigating between sessions)
-watch(() => route.params.id, () => {
+watch(() => route.params._id, () => {
   initializeSession();
 });
 </script>
@@ -69,6 +80,7 @@ watch(() => route.params.id, () => {
       :itens="history.history"
       @close="sidebarOpen = false"
       @rename="onRenameSession"
+      @select="onSelectSession"
     />
 
     <!-- Main layout -->

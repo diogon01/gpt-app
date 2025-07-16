@@ -14,8 +14,9 @@ defineProps<{ open: boolean }>();
 /**
  * Emits
  * @event close - Triggered when the user requests to close the sidebar
+ * @event select - Triggered when a session is selected via _id
  */
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; select: [id: string] }>();
 
 /* -------------------------------------------------------------------------- */
 /* Stores                                                                     */
@@ -35,13 +36,12 @@ const searchOpen = ref(false); // Controls visibility of the search modal
 /* -------------------------------------------------------------------------- */
 
 /**
- * Sets the selected session as active using its timestamp
+ * Emits the selected session _id to the parent
  *
- * @param {string} timestamp - ISO timestamp of the session to activate
+ * @param {string} _id - MongoDB _id of the session
  */
-function onSelectSession(timestamp: string) {
-  history.setActiveSessionByTimestamp(timestamp);
-  emit('close');
+function onSelectSession(_id: string) {
+  emit('select', _id);
 }
 
 /**
@@ -71,6 +71,7 @@ function onRenameSession(_id: string, newTitle: string) {
   history.renameSession(_id, newTitle);
 }
 </script>
+
 
 <template>
   <aside
