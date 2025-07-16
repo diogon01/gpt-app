@@ -14,9 +14,8 @@ const showDropdown = ref(false);
 const showLogin = ref(false);
 
 const isLoggedIn = computed(() => auth.isLoggedIn);
-const userStatus = computed(() =>
-  auth.user?.isPlus ? 'plus' : 'free'
-);
+const userStatus = computed(() => 'free');
+
 const userName = computed(() => auth.user?.displayName ?? 'Anonymous');
 const userAvatar = computed(() =>
   auth.user?.photoURL || `https://ui-avatars.com/api/?name=${userName.value}&background=random`
