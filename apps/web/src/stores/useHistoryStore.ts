@@ -279,5 +279,17 @@ export const useHistoryStore = defineStore('history', {
                 this.loading = false;
             }
         },
+
+        /**
+         * Resets the store to allow anonymous sessions without backend persistence.
+         * Useful when the user is not authenticated or doesn't require saving sessions.
+         */
+        resetSession() {
+            this.activeSession = {
+                _id: 'anon-' + new Date().getTime().toString(),
+                timestamp: new Date(),
+                messages: [],
+            };
+        },
     },
 });

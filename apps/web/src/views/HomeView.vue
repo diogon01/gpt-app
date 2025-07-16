@@ -17,52 +17,64 @@ const sidebarOpen = ref(false);
 
 /**
  * Handles new message emitted by PromptForm.
- * Starts a new session via backend if none exists and appends messages.
  *
- * @param msg - Object containing user prompt and assistant response
+ * - If no session exists and a `sessionId` is provided, the backend session is fetched and the user is routed.
+ * - If no session exists and no `sessionId` is provided, an in-memory session is initialized (anonymous user).
+ * - If a session already exists, messages are appended directly.
+ *
+ * @param msg - Object containing user prompt, assistant response, and optional session ID
  */
-async function onNewMessage(msg: { prompt: string; response: { text?: string; imgUrl?: string } }) {
+async function onNewMessage(msg: {
+  prompt: string;
+  response: { text?: string; imgUrl?: string };
+  sessionId?: string;
+}) {
   const isFirstMessage = !history.activeSession;
 
   if (isFirstMessage) {
-    // Create session in backend and wait for _id before navigating
-    const sessionId = await history.startNewSession({
-      role: MessageRole.User,
-      content: msg.prompt,
-    });
-
-    if (sessionId) {
-      router.push({ name: 'HistorySession', params: { _id: sessionId } });
+    if (msg.sessionId) {
+      // Authenticated user with backend-created session
+      await history.fetchById(msg.sessionId);
+      router.push({ name: 'HistorySession', params: { _id: msg.sessionId } });
+    } else {
+      // Anonymous user → local-only session
+      history.resetSession();
+      history.appendMessage({
+        role: MessageRole.User,
+        content: msg.prompt,
+      });
+      history.appendMessage({
+        role: MessageRole.Assistant,
+        content: msg.response.text ?? '',
+      });
     }
   } else {
-    // Append user message to existing session
+    // Continuation of an existing session
     history.appendMessage({
       role: MessageRole.User,
       content: msg.prompt,
     });
+    history.appendMessage({
+      role: MessageRole.Assistant,
+      content: msg.response.text ?? '',
+    });
   }
-
-  // Append assistant response to the session
-  history.appendMessage({
-    role: MessageRole.Assistant,
-    content: msg.response.text ?? '',
-  });
 }
 
 /**
- * Handles rename requests emitted by Sidebar.
+ * Handles session rename emitted by the Sidebar component.
  *
  * @param _id - Session ID to rename
- * @param newTitle - New title to assign to session
+ * @param newTitle - New session title
  */
 function onRenameSession(_id: string, newTitle: string) {
   history.renameSession(_id, newTitle);
 }
 
 /**
- * Handles session selection from Sidebar.
+ * Handles session selection from the Sidebar.
  *
- * @param sessionId - Selected session ID to activate
+ * @param sessionId - Session ID selected by the user
  */
 function onSelectSession(sessionId: string) {
   router.push({ name: 'HistorySession', params: { _id: sessionId } });
@@ -70,9 +82,9 @@ function onSelectSession(sessionId: string) {
 }
 
 /**
- * Initializes session based on route:
- * - Fetches specific session if ID is present
- * - Loads all history if on root ("/") route
+ * Initializes the current session on view load or route change.
+ * - Fetches the session from the backend if a session ID is present in the route.
+ * - Otherwise loads all user history and resets the active session.
  */
 async function initializeSession() {
   const sessionId = route.params._id as string | undefined;
