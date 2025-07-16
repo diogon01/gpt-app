@@ -6,7 +6,10 @@ import MarkdownIt from 'markdown-it';
 import { computed } from 'vue';
 
 /**
- * Props representing the content of a single user-assistant exchange.
+ * Props representing a single chat exchange between user and assistant.
+ * @property {string} prompt - User message text
+ * @property {{ text?: string; imgUrl?: string }} response - Assistant response content
+ * @property {boolean} [loading] - Optional flag indicating loading state for assistant reply
  */
 const props = defineProps<{
   prompt: string;
@@ -14,11 +17,17 @@ const props = defineProps<{
   loading?: boolean;
 }>();
 
-/** True when assistant content exists or is being generated */
+/**
+ * Flag indicating if the assistant content should be displayed.
+ * Returns true if loading is active or a response is present.
+ */
 const hasAssistant = computed(
   () => props.loading || !!props.response.text || !!props.response.imgUrl,
 );
 
+/**
+ * Markdown-it instance with syntax highlighting for code blocks.
+ */
 const md = new MarkdownIt().set({
   highlight(code: string, lang: string) {
     if (lang && hljs.getLanguage(lang)) {
@@ -30,7 +39,10 @@ const md = new MarkdownIt().set({
   },
 });
 
-/** Renders assistant text with markdown and syntax highlighting */
+/**
+ * Computed property that returns rendered HTML from assistant response text.
+ * Applies markdown parsing and syntax highlighting.
+ */
 const rendered = computed(() =>
   props.response.text ? md.render(props.response.text) : '',
 );
@@ -53,7 +65,7 @@ const rendered = computed(() =>
   >
     <p class="mb-2 font-semibold text-pink-300">Assistant</p>
 
-    <!-- Loader -->
+    <!-- Loader Spinner -->
     <div v-if="props.loading" class="flex justify-center">
       <svg class="h-6 w-6 animate-spin text-pink-300" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -65,10 +77,14 @@ const rendered = computed(() =>
       </svg>
     </div>
 
-    <!-- Image -->
-    <img v-if="props.response.imgUrl" :src="props.response.imgUrl" class="mb-3 w-full rounded" />
+    <!-- Assistant Image Response -->
+    <img
+      v-if="props.response.imgUrl"
+      :src="props.response.imgUrl"
+      class="mb-3 w-full rounded"
+    />
 
-    <!-- Markdown Text -->
+    <!-- Assistant Text Response -->
     <div
       v-if="props.response.text && !props.loading"
       v-html="rendered"

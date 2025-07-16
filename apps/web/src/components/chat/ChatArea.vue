@@ -1,12 +1,20 @@
+<!-- apps/web/src/components/chat/ChatArea.vue -->
 <script setup lang="ts">
-
 import type { UserMessageResponseDTO } from '@42robotics/domain';
+import { computed } from 'vue';
 import MessageBubble from './MessageBubble.vue';
 
+/**
+ * Props received by the ChatArea component
+ * @property {UserMessageResponseDTO[]} items - List of messages in the current session
+ */
 const { items } = defineProps<{ items: UserMessageResponseDTO[] }>();
 
 /**
- * Groups user/assistant messages into pairs for rendering as chat bubbles.
+ * Groups messages into user/assistant pairs to display as chat bubbles.
+ *
+ * @param {UserMessageResponseDTO[]} messages - Array of messages from the session
+ * @returns {Array} Array of objects each containing a user prompt and optional assistant response
  */
 function groupMessages(messages: UserMessageResponseDTO[]) {
   const result: { prompt: string; response: { text?: string } }[] = [];
@@ -25,7 +33,10 @@ function groupMessages(messages: UserMessageResponseDTO[]) {
   return result;
 }
 
-const bubbles = groupMessages(items);
+/**
+ * Reactive list of chat bubbles generated from the current session messages.
+ */
+const bubbles = computed(() => groupMessages(items));
 </script>
 
 <template>
