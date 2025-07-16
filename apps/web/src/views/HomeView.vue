@@ -30,15 +30,15 @@ function onNewMessage(msg: { prompt: string; response: { text?: string; imgUrl?:
 /**
  * Handles rename requests emitted by the sidebar.
  *
- * @param timestamp - Session timestamp used for matching
+ * @param _id - Session _id used for matching
  * @param newTitle - New title to apply to the session
  */
-function onRenameSession(timestamp: string, newTitle: string) {
-  history.renameSession(timestamp, newTitle);
+function onRenameSession(_id: string, newTitle: string) {
+  history.renameSession(_id, newTitle);
 }
 
 /**
- * Handles navigation when user selects a session from sidebar
+ * Handles navigation when user selects a session from sidebar.
  *
  * @param sessionId - MongoDB _id of the session
  */
@@ -48,25 +48,32 @@ function onSelectSession(sessionId: string) {
 }
 
 /**
- * Initializes session based on route param or falls back to full history.
- * This is executed on initial mount or when route param changes.
+ * Initializes session:
+ * - If sessionId exists in route, fetch that session.
+ * - If route is root ("/"), ensure history is loaded and create a new session.
  */
 async function initializeSession() {
   const sessionId = route.params._id as string | undefined;
 
   if (sessionId) {
     await history.fetchById(sessionId);
-  } else if (!history.history.length) {
-    await history.fetch();
+  } else {
+    if (!history.history.length) {
+      await history.fetch();
+    }
+
+    // Starts a new session to ensure PromptForm saves to it
+    history.startNewSession();
   }
 }
 
-// Load session or full history on mount
+
+// Load session or reset on mount
 onMounted(() => {
   initializeSession();
 });
 
-// React to route changes (e.g., when navigating between sessions)
+// React to route param changes (e.g., session switch or "/")
 watch(() => route.params._id, () => {
   initializeSession();
 });
