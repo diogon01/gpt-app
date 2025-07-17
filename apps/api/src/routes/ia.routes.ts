@@ -1,8 +1,8 @@
 // src/routes/ia.routes.ts
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { handleIA } from '../controllers/ia.controller';
 
-const router = Router();
+const router: Router = express.Router();
 router.post('/ia/:tipo(art|geo)', handleIA);
 
 export default router;

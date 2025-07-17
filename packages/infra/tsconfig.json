@@ -1,6 +1,7 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
+        "composite": true,
         "target": "ES2019",
         "module": "commonjs",
         "moduleResolution": "node",
@@ -10,6 +11,7 @@
         "resolveJsonModule": true,
         "declaration": true,
         "outDir": "dist",
+        "rootDir": "src",
         "typeRoots": [
             "./src/types",
             "./node_modules/@types"
@@ -19,6 +21,8 @@
         ]
     },
     "include": [
-        "src"
+        "src",
+        "src/index.ts",
+        "src/config/agro42-service-account.json"
     ]
 }

@@ -1,36 +1,55 @@
 # ──────────────────────────────────────────────
-# 1️⃣ Build Stage — instala deps, compila e poda
+# 1️⃣ Builder Stage — compila dependências + front
 # ──────────────────────────────────────────────
-FROM node:20-alpine AS build
-WORKDIR /workspace
+FROM node:20-alpine AS builder
+WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.12.4 --activate
+
+# 1. Manifests
+COPY pnpm-workspace.yaml ./
+COPY package.json ./
+COPY apps/*/package.json apps/
+COPY packages/*/package.json packages/
+
+# 2. Código completo (node_modules ignorado via .dockerignore)
 COPY . .
-RUN pnpm install --no-frozen-lockfile --prefer-offline
+
+# 3. Instala todas as dependências
+RUN pnpm install --no-frozen-lockfile
+
+# 4. Tipos globais
+RUN pnpm add -Dw @types/node
+
+# 5. Compila pacotes e front
 RUN pnpm --filter @42robotics/domain... run build && \
   pnpm --filter @42robotics/infra...  run build && \
-  pnpm --filter api run build        && \
-  pnpm --filter web run build
-RUN pnpm prune --prod
+  pnpm --filter api                   run build && \
+  pnpm --filter web                   run build
+# 👉 sem `pnpm prune --prod`
 
 # ──────────────────────────────────────────────
-# 2️⃣ Runtime Stage — imagem enxuta e funcional
+# 2️⃣ Runtime da API
 # ──────────────────────────────────────────────
-FROM node:20-alpine AS runtime
+FROM node:20-alpine AS api-runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# ✅ instala o bash para debugging
+# Bash para debug
 RUN apk add --no-cache bash
 
-RUN apk --no-cache add nginx
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copia node_modules completo (contém express, cors, etc.)
+COPY --from=builder /app/node_modules ./node_modules
 
-# ✅ copia o workspace inteiro (node_modules, apps, packages etc.)
-COPY packages/infra/.env .env
-COPY --from=build /workspace .
+# Copia dist da API e libs locais
+COPY --from=builder /app/apps/api/dist              ./apps/api/dist
+COPY --from=builder /app/packages/domain/dist       ./node_modules/@42robotics/domain
+COPY --from=builder /app/packages/infra/dist        ./node_modules/@42robotics/infra/src
+COPY --from=builder /app/packages/infra/package.json ./node_modules/@42robotics/infra/package.json
 
-COPY packages/infra/.env .env
+# Arquivo .env (se precisar)
+COPY apps/api/.env ./apps/api/.env
 
-EXPOSE 80
-CMD ["sh", "-c", "node apps/api/dist/apps/api/src/server.js & nginx -g 'daemon off;'"]
+EXPOSE 3000
+
+CMD ["node", "apps/api/dist/apps/api/src/server.js"]

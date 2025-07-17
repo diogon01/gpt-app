@@ -3,4 +3,5 @@ export { admin, getApp, getAuth } from './auth/firebaseAdmin'; // ✅ agora "adm
 export * from './auth/firebaseAuth';
 
 export * from './config/env';
+export * from './config/mongoClient';
 export * from './config/openai';

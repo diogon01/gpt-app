@@ -1,22 +1,23 @@
 {
     "compilerOptions": {
-        "target": "ESNext",
-        "module": "ESNext",
-        "moduleResolution": "Node",
+        "target": "ES2019",
+        "module": "commonjs",
+        "moduleResolution": "node",
         "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
         "strict": true,
         "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
         "baseUrl": ".",
         "paths": {
             "@42robotics/domain": [
-                "packages/domain/src/index.ts"
+                "packages/domain/src"
             ],
             "@42robotics/domain/*": [
                 "packages/domain/src/*"
             ],
             "@42robotics/infra": [
-                "packages/infra/src/index.ts"
+                "packages/infra/src"
             ],
             "@42robotics/infra/*": [
                 "packages/infra/src/*"

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import {
   createUserHistorySession,
   deleteHistorySession,
@@ -8,7 +8,7 @@ import {
   searchUserHistory,
 } from '../controllers/history.controller';
 
-const router = Router();
+const router: Router = express.Router();
 
 /**
  * @route GET /history

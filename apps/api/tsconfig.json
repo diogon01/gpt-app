@@ -1,36 +1,26 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2019",
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
     "module": "commonjs",
+    "target": "ES2019",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "strict": true,
     "resolveJsonModule": true,
-    "outDir": "dist",
-    "typeRoots": [
-      "./src/types",
-      "./node_modules/@types"
-    ],
-    "paths": {
-      "@42robotics/domain": [
-        "../../packages/domain/src"
-      ],
-      "@42robotics/domain/*": [
-        "../../packages/domain/src/*"
-      ],
-      "@42robotics/infra": [
-        "../../packages/infra/src"
-      ],
-      "@42robotics/infra/*": [
-        "../../packages/infra/src/*"
-      ]
-    }
+    "skipLibCheck": true // evita warnings TS2742
   },
   "include": [
-    "src",
-    "../../packages/domain/src",
-    "../../packages/infra/src"
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../packages/domain"
+    },
+    {
+      "path": "../../packages/infra"
+    }
   ]
 }

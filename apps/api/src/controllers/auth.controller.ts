@@ -1,10 +1,6 @@
 // apps/api/src/controllers/auth.controller.ts
-import {
-    AuthProvider,
-    AuthTokens,
-    CreateUserDTO,
-    ServiceName,
-} from '@42robotics/domain';
+
+import { AuthProvider, AuthTokens, CreateUserDTO, ServiceName } from '@42robotics/domain';
 import { admin } from '@42robotics/infra';
 import { RequestHandler } from 'express';
 import { UserService } from '../services/user.service';

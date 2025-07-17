@@ -2,13 +2,13 @@ import {
     CreateUserDTO,
     MongoUser,
     ServiceName,
+    SubscriptionEvent,
     SubscriptionPlan,
     SubscriptionStatus,
-    SubscriptionEvent,
     UserRepository
 } from '@42robotics/domain';
 
-import { getMongoClient } from '@42robotics/infra/src/config/mongoClient';
+import { getMongoClient } from '@42robotics/infra';
 
 export class MongoUserRepository implements UserRepository {
     private readonly collectionName = process.env.MONGO_USERS_COLLECTION ?? '42r_users_prod';

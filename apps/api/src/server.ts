@@ -2,18 +2,19 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-// ✅ Initialize Firebase Admin (centralized in infra layer)
-import '@42robotics/infra/src/auth/firebaseAdmin';
-
-import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
+import express, { NextFunction, Request, RequestHandler, Response } from 'express';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 
-import { env } from '@42robotics/infra/src/config/env';
-import { getMongoClient } from '@42robotics/infra/src/config/mongoClient';
+import {
+    env,
+    firebaseAuth,
+    getMongoClient
+} from '@42robotics/infra';
+
 import routes from './routes';
-import { firebaseAuth } from '@42robotics/infra';
+
 
 const app = express();
 

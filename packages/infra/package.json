@@ -2,12 +2,21 @@
     "name": "@42robotics/infra",
     "version": "1.0.0",
     "description": "Shared infrastructure layer for the 42Robotics application",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "require": "./dist/index.js",
+            "import": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
     "scripts": {
         "clean": "rimraf dist",
-        "build": "tsc --build",
-        "prebuild": "pnpm clean"
+        "prebuild": "pnpm run clean",
+        "build": "tsc --build"
     },
     "keywords": [
         "infra",
@@ -32,6 +41,7 @@
         "@types/dotenv": "^8.2.3",
         "@types/express": "^5.0.3",
         "@types/mongoose": "^5.11.97",
-        "@types/node": "^20.19.4"
+        "@types/node": "^20.19.4",
+        "rimraf": "^5.0.5"
     }
 }

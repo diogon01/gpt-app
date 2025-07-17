@@ -5,7 +5,7 @@ import {
     SubscriptionPlan,
     SubscriptionStatus,
 } from '@42robotics/domain';
-import { getMongoClient } from '@42robotics/infra/src/config/mongoClient';
+import { getMongoClient } from '@42robotics/infra';
 
 export class UserService {
     static async upsertUser(data: CreateUserDTO, service: ServiceName) {

@@ -39,3 +39,6 @@ export * from './enums/subscription-status';
 // Export explícito (resolvendo erro de Rollup)
 import { MessageRole as _MessageRole } from './enums/message-role.enum';
 export const MessageRole = _MessageRole;
+
+
+export const _domainEntryPoint = true;

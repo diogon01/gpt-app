@@ -1,11 +1,12 @@
 import {
+  HistoryRenameRequestDTO,
   mapHistoryEntryToDTO,
   MessageRole,
   UserHistoryEntryEntity,
+  UserHistoryEntryResponseDTO,
 } from '@42robotics/domain';
-import { HistoryRenameRequestDTO } from '@42robotics/domain/src/dtos/request/history-rename-request.dto';
-import { UserHistoryEntryResponseDTO } from '@42robotics/domain/src/dtos/response/user-history-entry-response.dto';
-import { getMongoClient } from '@42robotics/infra/src/config/mongoClient';
+
+import { getMongoClient } from '@42robotics/infra';
 import { ObjectId } from 'mongodb';
 
 const COLLECTION_NAME = '42r_prompt_results_prod';

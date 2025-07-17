@@ -1,5 +1,5 @@
+import { env } from '@42robotics/infra';
 import { OpenAI } from 'openai';
-import { env } from '@42robotics/infra/src/config/env';
 
 /**
  * Generates a chat completion with Azure OpenAI.
