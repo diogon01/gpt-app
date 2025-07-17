@@ -14,7 +14,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "prebuild": "pnpm run clean",
-    "build": "tsc --build"
+    "build": "tsc -b --force"
   },
   "keywords": [
     "domain",

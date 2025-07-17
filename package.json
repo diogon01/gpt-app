@@ -14,9 +14,11 @@
     "dev:api": "pnpm --filter api dev",
     "debug:api": "ts-node --transpile-only apps/api/src/server.ts",
     "clean": "rimraf packages/domain/dist packages/infra/dist apps/api/dist",
-    "build": "pnpm run clean && pnpm -r run build",
-    "build:all": "tsc -b packages/infra packages/domain apps/api",
-    "start:api": "pnpm --filter api start"
+    "build": "pnpm run clean && pnpm run build:all",
+    "build:all": "pnpm -r run build",
+    "start:api": "pnpm --filter api start",
+    "start:web": "pnpm --filter web start",
+    "start": "concurrently -k \"pnpm start:api\" \"pnpm start:web\""
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
