@@ -1,12 +1,12 @@
 // apps/api/src/controllers/auth.controller.ts
-import { RequestHandler } from 'express';
-import { admin } from '@42robotics/infra/src/auth/firebaseAdmin';
 import {
-    CreateUserDTO,
-    AuthTokens,
     AuthProvider,
+    AuthTokens,
+    CreateUserDTO,
     ServiceName,
 } from '@42robotics/domain';
+import { admin } from '@42robotics/infra';
+import { RequestHandler } from 'express';
 import { UserService } from '../services/user.service';
 
 export const handleAuthSync: RequestHandler = async (req, res, next) => {

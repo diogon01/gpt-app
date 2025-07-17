@@ -1,6 +1,8 @@
-import { HistoryRenameRequestDTO } from '@42robotics/domain/src';
-import { HistorySearchResponseDTO } from '@42robotics/domain/src/dtos/response/history-search-response.dto';
-import { mapUserHistoryToDTO } from '@42robotics/domain/src/mappers/user-history.mapper';
+import {
+  HistoryRenameRequestDTO,
+  HistorySearchResponseDTO,
+  mapUserHistoryToDTO,
+} from '@42robotics/domain';
 import { RequestHandler } from 'express';
 import { HistoryService } from '../services/history.service';
 

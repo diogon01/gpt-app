@@ -27,7 +27,10 @@ RUN apk --no-cache add nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # ✅ copia o workspace inteiro (node_modules, apps, packages etc.)
+COPY packages/infra/.env .env
 COPY --from=build /workspace .
+
+COPY packages/infra/.env .env
 
 EXPOSE 80
 CMD ["sh", "-c", "node apps/api/dist/apps/api/src/server.js & nginx -g 'daemon off;'"]

@@ -1,7 +1,7 @@
-import { IARequestDTO } from '@42robotics/domain/src/dtos/ia-request.dto';
-import { IAResponseDTO } from '@42robotics/domain/src/dtos/ia-response.dto';
-import { mapIAResponse } from '@42robotics/domain/src/mappers/ia-response.mapper';
-import { openai } from '@42robotics/infra/src/config/openai';
+
+import { IARequestDTO, IAResponseDTO, mapIAResponse } from '@42robotics/domain';
+import { openai } from '@42robotics/infra';
+
 import { RequestHandler } from 'express';
 import { HistoryService } from '../services/history.service';
 import { generateChatCompletion } from '../services/openai.service';

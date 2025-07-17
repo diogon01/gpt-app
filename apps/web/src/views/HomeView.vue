@@ -8,7 +8,7 @@ import Sidebar from '@/components/layout/Sidebar.vue';
 import TopBar from '@/components/layout/TopBar.vue';
 
 
-import { MessageRole } from '@42robotics/domain';
+
 import { useHistoryStore } from '../stores/useHistoryStore';
 
 const route = useRoute();
@@ -41,22 +41,22 @@ async function onNewMessage(msg: {
       // Anonymous user → local-only session
       history.resetSession();
       history.appendMessage({
-        role: MessageRole.User,
+        role: 'user',
         content: msg.prompt,
       });
       history.appendMessage({
-        role: MessageRole.Assistant,
+        role: 'assistant',
         content: msg.response.text ?? '',
       });
     }
   } else {
     // Continuation of an existing session
     history.appendMessage({
-      role: MessageRole.User,
+      role: 'user',
       content: msg.prompt,
     });
     history.appendMessage({
-      role: MessageRole.Assistant,
+      role: 'assistant',
       content: msg.response.text ?? '',
     });
   }

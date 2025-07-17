@@ -6,7 +6,7 @@ import { MessageRole } from '../enums/message-role.enum';
  * All timestamps are true Date objects.
  */
 export interface UserMessageEntity {
-  role: MessageRole;
+  role: MessageRole | string;
   content: string;
   timestamp: Date;
 

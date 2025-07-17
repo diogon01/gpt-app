@@ -1,8 +1,7 @@
 // packages/domain/src/dtos/user-message-response.dto.ts
-import { MessageRole } from '../enums/message-role.enum';
 
 export interface UserMessageResponseDTO {
-  role: MessageRole;
+  role: any;
   content: string;
   timestamp: string;
   name?: string;
