@@ -18,7 +18,7 @@ RUN pnpm install
 RUN pnpm build
 
 # Expõe as portas da API e do Frontend (Vite)
-EXPOSE 3000 4173
+EXPOSE 3000 80
 
 # Comando padrão: roda API e Frontend juntos
 CMD ["pnpm", "start"]

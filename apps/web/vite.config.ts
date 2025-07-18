@@ -15,7 +15,8 @@ export default defineConfig({
     }
   },
   preview: {
-    host: '0.0.0.0', // 👈 necessário para funcionar no Docker
-    port: 4173       // 👈 mesma porta que o Vite usa por padrão no preview
+    host: '0.0.0.0',
+    port: 80,
+    allowedHosts: ['ia.42robotics.com.br']
   }
 });
